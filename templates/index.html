@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI 日记助手</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}">
+</head>
+<body>
+    <h1>AI 日记助手</h1>
+
+    <div class="card">
+        <h2>写一条今天的日记</h2>
+        <textarea id="content" placeholder="请输入今天的记录..."></textarea>
+        <br />
+        <button onclick="submitEntry()" id="submitBtn">提交</button>
+        <button onclick="loadWeeklyReport()">生成本周周报</button>
+    </div>
+
+    <div id="entries"></div>
+        <div class="card" id="weeklyReportCard" style="display: none;">
+        <h2>本周周报</h2>
+        <p id="weeklySummary"></p>
+        <p id="moodOverview"></p>
+        <h3>本周重点待办</h3>
+        <ul id="weeklyTodos"></ul>
+        <p id="nextWeekSuggestion"></p>
+    </div>
+
+    <script>
+        async function loadEntries() {
+            const res = await fetch("/entries");
+            const data = await res.json();
+
+            const container = document.getElementById("entries");
+            container.innerHTML = "";
+
+            data.forEach(entry => {
+                const todosHtml = (entry.todos || []).length
+                    ? `<ul>${entry.todos.map(todo => `<li>${todo}</li>`).join("")}</ul>`
+                    : `<p>暂无待办</p>`;
+
+                const html = `
+                    <div class="card">
+                        <h3>原文</h3>
+                        <p>${entry.content}</p>
+
+                        <h3>AI 总结</h3>
+                        <p>${entry.summary || "暂无总结"}</p>
+
+                        <h3>情绪</h3>
+                        <div class="mood mood-${entry.mood || "未知"}">${entry.mood || "未知"}</div>
+
+                        <h3>待办事项</h3>
+                        ${todosHtml}
+
+                        <div class="meta">创建时间：${formatDate(entry.created_at)}</div>
+
+                    </div>
+                    <button onclick="deleteEntry(${entry.id})">删除</button>
+                `;
+                container.innerHTML += html;
+            });
+        }
+
+        async function submitEntry() {
+            const contentInput = document.getElementById("content")
+            const button = document.getElementById("submitBtn")
+            const content = document.getElementById("content").value.trim();
+
+            if (!content) {
+                alert("请输入日记内容");
+                return;
+            }
+
+            button.disabled = true
+            button.textContent = "分析中..."
+
+            try{
+                const res = await fetch("/entries",{
+                    method: "POST",
+                    headers: {
+                        "content-type": "application/json"
+                    },
+                    body: JSON.stringify({ content })
+                })
+                if (!res.ok) {
+                    alert("提交失败");
+                    return;
+                }
+
+                contentInput.value=""
+                await loadEntries()
+
+            } catch(error){
+                alert("请求失败，请稍后重试")
+            }finally{
+                button.disabled = false
+                button.textContent = "提交"
+            }
+
+            document.getElementById("content").value = "";
+            await loadEntries();
+        }
+
+        loadEntries();
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, "0");
+            const day = String(date.getDate()).padStart(2, "0");
+            const hours = String(date.getHours()).padStart(2, "0");
+            const minutes = String(date.getMinutes()).padStart(2, "0");
+
+            return `${year}-${month}-${day} ${hours}:${minutes}`;
+        }
+
+        async function deleteEntry(entryId) {
+            const ok = confirm("确认删除这条日记吗？");
+            if (!ok) return;
+
+            try {
+                const res = await fetch(`/entries/${entryId}`, {
+                    method: "DELETE"
+                });
+
+                if (!res.ok) {
+                    alert("删除失败");
+                    return;
+                }
+
+                await loadEntries();
+            } catch (error) {
+                alert("请求失败，请稍后重试");
+            }
+        }
+
+        async function loadWeeklyReport() {        //周报
+            try {
+                const res = await fetch("/weekly-report");
+                const data = await res.json();
+
+                document.getElementById("weeklyReportCard").style.display = "block";
+                document.getElementById("weeklySummary").textContent =
+                    "本周总结：" + (data.weekly_summary || "暂无");
+                document.getElementById("moodOverview").textContent =
+                    "情绪概览：" + (data.mood_overview || "暂无");
+                document.getElementById("nextWeekSuggestion").textContent =
+                    "下周建议：" + (data.next_week_suggestion || "暂无");
+
+                const todosEl = document.getElementById("weeklyTodos");
+                todosEl.innerHTML = "";
+
+                (data.key_todos || []).forEach(todo => {
+                    const li = document.createElement("li");
+                    li.textContent = todo;
+                    todosEl.appendChild(li);
+                });
+            } catch (error) {
+                alert("周报生成失败，请稍后重试");
+            }
+        }
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+

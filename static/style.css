@@ -1,0 +1,88 @@
+body {
+    font-family: Arial, sans-serif;
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 0 16px;
+    background: #f7f7f7;
+}
+
+h1 {
+    text-align: center;
+}
+
+.card {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+    font-size: 16px;
+}
+
+button {
+    margin-top: 12px;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 8px;
+    background: #1677ff;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #0958d9;
+}
+
+.mood {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    margin-top: 8px;
+    font-size: 14px;
+    font-weight: bold;
+    color: white;
+}
+
+.mood-开心 {
+    background: #52c41a;
+}
+
+.mood-平静 {
+    background: #8c8c8c;
+}
+
+.mood-焦虑 {
+    background: #fa8c16;
+}
+
+.mood-沮丧 {
+    background: #f5222d;
+}
+
+.mood-疲惫 {
+    background: #722ed1;
+}
+
+.mood-未知 {
+    background: #bfbfbf;
+}
+
+ul {
+    padding-left: 20px;
+}
+
+.meta {
+    color: #666;
+    font-size: 14px;
+    margin-top: 10px;
+}
