@@ -86,3 +86,35 @@ ul {
     font-size: 14px;
     margin-top: 10px;
 }
+.secondary-btn {
+    margin-top: 12px;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 8px;
+    background: #6f42c1;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.secondary-btn:hover {
+    background: #59359c;
+}
+
+.secondary-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.is-loading {
+    position: relative;
+}
+
+.loading-box {
+    margin-top: 12px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    background: #f5f5f5;
+    color: #555;
+    font-size: 14px;
+}

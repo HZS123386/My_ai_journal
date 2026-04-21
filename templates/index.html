@@ -14,25 +14,43 @@
         <textarea id="content" placeholder="请输入今天的记录..."></textarea>
         <br />
         <button onclick="submitEntry()" id="submitBtn">提交</button>
-        <button onclick="loadWeeklyReport()">生成本周周报</button>
+        <button onclick="loadWeeklyReport()" id="weeklyBtn" class="secondary-btn" onClick="loadWeeklyReport()">生成本周周报</button>
     </div>
 
-    <div id="entries"></div>
-        <div class="card" id="weeklyReportCard" style="display: none;">
+    <div class="card" id="weeklyReportCard" style="display: none;">
         <h2>本周周报</h2>
-        <p id="weeklySummary"></p>
-        <p id="moodOverview"></p>
-        <h3>本周重点待办</h3>
-        <ul id="weeklyTodos"></ul>
-        <p id="nextWeekSuggestion"></p>
-    </div>
 
+        <div id="weeklyLoading" class="loading-box" style="display: none;">
+            正在分析本周记录...
+        </div>
+
+        <div id="weeklyReportContent" style="display: none;">
+            <p id="weeklySummary"></p>
+            <p id="moodOverview"></p>
+
+            <h3>本周重点待办</h3>
+            <ul id="weeklyTodos"></ul>
+
+            <p id="nextWeekSuggestion"></p>
+        </div>
+    </div>
+    <div id="entries"></div>
     <script>
         async function loadEntries() {
-            const res = await fetch("/entries");
-            const data = await res.json();
-
             const container = document.getElementById("entries");
+
+            if (!container) {
+                console.error("找不到 #entries 容器");
+                return;
+            }
+
+            const res = await fetch("/entries");
+
+            if (!res.ok) {
+                throw new Error("获取日记列表失败");
+            }
+
+            const data = await res.json();
             container.innerHTML = "";
 
             data.forEach(entry => {
@@ -55,10 +73,9 @@
                         ${todosHtml}
 
                         <div class="meta">创建时间：${formatDate(entry.created_at)}</div>
-
                     </div>
-                    <button onclick="deleteEntry(${entry.id})">删除</button>
                 `;
+
                 container.innerHTML += html;
             });
         }
@@ -137,12 +154,37 @@
             }
         }
 
-        async function loadWeeklyReport() {        //周报
+        let weeklyReportLoading = false;
+
+        async function loadWeeklyReport() {
+            if (weeklyReportLoading) return;
+
+            const btn = document.getElementById("weeklyBtn");
+            const card = document.getElementById("weeklyReportCard");
+            const loadingBox = document.getElementById("weeklyLoading");
+            const contentBox = document.getElementById("weeklyReportContent");
+            const todosEl = document.getElementById("weeklyTodos");
+
+            weeklyReportLoading = true;
+            btn.disabled = true;
+            btn.textContent = "分析中...";
+            btn.classList.add("is-loading");
+
+            card.style.display = "block";
+            loadingBox.style.display = "block";
+            loadingBox.textContent = "正在分析本周记录...";
+            contentBox.style.display = "none";
+            todosEl.innerHTML = "";
+
             try {
                 const res = await fetch("/weekly-report");
+
+                if (!res.ok) {
+                    throw new Error("周报请求失败");
+                }
+
                 const data = await res.json();
 
-                document.getElementById("weeklyReportCard").style.display = "block";
                 document.getElementById("weeklySummary").textContent =
                     "本周总结：" + (data.weekly_summary || "暂无");
                 document.getElementById("moodOverview").textContent =
@@ -150,16 +192,23 @@
                 document.getElementById("nextWeekSuggestion").textContent =
                     "下周建议：" + (data.next_week_suggestion || "暂无");
 
-                const todosEl = document.getElementById("weeklyTodos");
-                todosEl.innerHTML = "";
-
                 (data.key_todos || []).forEach(todo => {
                     const li = document.createElement("li");
                     li.textContent = todo;
                     todosEl.appendChild(li);
                 });
+
+                loadingBox.style.display = "none";
+                contentBox.style.display = "block";
             } catch (error) {
-                alert("周报生成失败，请稍后重试");
+                loadingBox.style.display = "block";
+                loadingBox.textContent = "周报生成失败，请稍后重试。";
+                contentBox.style.display = "none";
+            } finally {
+                weeklyReportLoading = false;
+                btn.disabled = false;
+                btn.textContent = "生成本周周报";
+                btn.classList.remove("is-loading");
             }
         }
     </script>
