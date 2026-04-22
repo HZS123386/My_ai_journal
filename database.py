@@ -1,11 +1,15 @@
+import os
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-DATABASE_URL = "sqlite:///./journal.db"
+load_dotenv()
+
+DATABASE_URL = os.getenv("sqlite:///./journal.db")
 
 engine = create_engine(   #Python和数据库之间的总连接器
     DATABASE_URL,
-    connect_args = {"check_same_thread": False},   #允许这个连接在不同线程里被使用
+    connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}   #允许这个连接在不同线程里被使用
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
