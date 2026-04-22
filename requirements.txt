@@ -6,3 +6,4 @@ python-multipart
 jinja2
 python-dotenv
 openai
+psycopg2-binary
