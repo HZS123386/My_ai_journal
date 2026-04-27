@@ -6,4 +6,9 @@ python-multipart
 jinja2
 python-dotenv
 openai
+email-validator
+passlib[bcrypt]
+bcrypt==4.0.1
+python-jose[cryptography]
+email-validator
 psycopg2-binary

@@ -1,13 +1,23 @@
-from fastapi import FastAPI, Depends, Request
+from fastapi import FastAPI, Depends, Request, HTTPException
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 from database import Base, engine, SessionLocal
-from models import Entry
-from schemas import EntryCreate, EntryResponse
+from models import Entry, User
+from schemas import (
+    EntryCreate,
+    EntryResponse,
+    UserCreate,
+    UserLogin,
+    UserResponse,
+    TokenResponse,
+)
 from ai_service import analyze_entry, generate_weekly_report as generate_weekly_report_ai
+from auth import hash_password, verify_password, create_access_token, decode_access_token
 
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
@@ -20,6 +30,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 
+
 def get_db():
     db = SessionLocal()
     try:
@@ -27,7 +38,60 @@ def get_db():
     finally:
         db.close()
 
+def get_current_user(
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db)
+):
+    payload = decode_access_token(token)
+    if not payload:
+        raise HTTPException(status_code=401, detail="无效或过期的 token")
 
+    user_id = payload.get("sub")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="token 缺少用户信息")
+
+    user = db.query(User).filter(User.id == int(user_id)).first()
+    if not user:
+        raise HTTPException(status_code=401, detail="用户不存在")
+
+    return user
+
+#注册
+@app.post("/register", response_model=UserResponse, summary="用户注册")
+def register(user: UserCreate, db: Session = Depends(get_db)):
+    existing_user = db.query(User).filter(
+        (User.email == user.email) | (User.username == user.username)
+    ).first()
+
+    if existing_user:
+        raise HTTPException(status_code=400, detail="用户名或邮箱已存在")
+
+    new_user = User(
+        username=user.username,
+        email=user.email,
+        password_hash=hash_password(user.password),
+    )
+
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
+
+#登录
+@app.post("/login", response_model=TokenResponse, summary="用户登录")
+def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    db_user = db.query(User).filter(User.email == form_data.username).first()
+
+    if not db_user or not verify_password(form_data.password, db_user.password_hash):
+        raise HTTPException(status_code=401, detail="邮箱或密码错误")
+
+    access_token = create_access_token(
+        data={"sub": str(db_user.id), "email": db_user.email}
+    )
+
+    return {"access_token": access_token, "token_type": "bearer"}
+
+#首页
 @app.get("/", summary="首页")
 def home(request: Request):
     return templates.TemplateResponse(
@@ -36,14 +100,18 @@ def home(request: Request):
         context={}
     )
 
-
+#新建
 @app.post(
     "/entries",
     response_model=EntryResponse,
     summary="新建日记",
     description="创建一条新的日记记录"
 )
-def create_entry(entry: EntryCreate, db: Session = Depends(get_db)):
+def create_entry(
+        entry: EntryCreate,
+        db: Session = Depends(get_db),
+        current_user: User = Depends(get_current_user)
+):
     ai_result = analyze_entry(entry.content)
 
     new_entry = Entry(
@@ -51,6 +119,7 @@ def create_entry(entry: EntryCreate, db: Session = Depends(get_db)):
         summary=ai_result["summary"],
         mood=ai_result["mood"],
         todos=ai_result["todos"],
+        user_id=current_user.id,
     )
 
     db.add(new_entry)
@@ -58,32 +127,57 @@ def create_entry(entry: EntryCreate, db: Session = Depends(get_db)):
     db.refresh(new_entry)
     return new_entry
 
-
+#获取
 @app.get(
     "/entries",
     response_model=list[EntryResponse],
     summary="获取日记列表",
     description="按最新创建时间倒序返回所有日记"
 )
-def list_entries(db: Session = Depends(get_db)):
-    return db.query(Entry).order_by(Entry.id.desc()).all()
+def list_entries(
+        db: Session = Depends(get_db),
+        current_user: User = Depends(get_current_user)
+):
+    return (
+            db.query(Entry)
+            .filter(Entry.user_id == current_user.id)
+            .order_by(Entry.id.desc())
+            .all()
+    )
 
-
+#删除
 @app.delete("/entries/{entry_id}", summary="删除日记")
-def delete_entry(entry_id: int, db: Session = Depends(get_db)):
-    entry = db.query(Entry).filter(Entry.id == entry_id).first()
+def delete_entry(
+        entry_id: int,
+        db: Session = Depends(get_db),
+        current_user: User = Depends(get_current_user)
+):
+    entry = (
+        db.query(Entry)
+        .filter(Entry.id == entry_id, Entry.user_id == current_user.id)
+        .first()
+    )
 
     if not entry:
-        return {"message": "未找到该日记"}
+        raise HTTPException(status_code=404, detail="未找到该日记")
 
     db.delete(entry)
     db.commit()
     return {"message": "删除成功"}
 
-
+#生成周报
 @app.get("/weekly-report", summary="生成周报")
-def weekly_report(db: Session = Depends(get_db)):
-    entries = db.query(Entry).order_by(Entry.created_at.desc()).limit(7).all()
+def weekly_report(
+        db: Session = Depends(get_db),
+        current_user: User = Depends(get_current_user)
+):
+    entries = (
+        db.query(Entry)
+        .filter(Entry.user_id == current_user.id)
+        .order_by(Entry.created_at.desc())
+        .limit(7)
+        .all()
+    )
 
     if not entries:
         return {
@@ -97,7 +191,7 @@ def weekly_report(db: Session = Depends(get_db)):
         {
             "content": entry.content,
             "summary": entry.summary or "",
-            "mood": entry.mood or "未知",
+            "mood": entry.mood or "",
             "todos": entry.todos or [],
             "created_at": str(entry.created_at),
         }

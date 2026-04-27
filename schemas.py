@@ -1,27 +1,54 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, EmailStr
 from datetime import datetime
+from typing import Optional, List
 
-class EntryCreate(BaseModel):
-    content: str
 
-class EntryResponse(BaseModel):
+# =========================
+# 用户相关
+# =========================
+
+class UserCreate(BaseModel):
+    username: str
+    email: EmailStr
+    password: str
+
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class UserResponse(BaseModel):
     id: int
-    content: str
-    summary: str | None = None
-    mood: str | None = None
-    todos: list[str] = Field(default_factory=list)   #防止没提取到而报错
+    username: str
+    email: EmailStr
     created_at: datetime
 
     class Config:
         from_attributes = True
 
 
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
 
 
+# =========================
+# 日记相关
+# =========================
+
+class EntryCreate(BaseModel):
+    content: str
 
 
+class EntryResponse(BaseModel):
+    id: int
+    content: str
+    summary: Optional[str] = None
+    mood: Optional[str] = None
+    todos: Optional[List[str]] = None
+    created_at: datetime
+    user_id: Optional[int] = None
 
-
-
-
-
+    class Config:
+        from_attributes = True

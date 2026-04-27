@@ -1,6 +1,6 @@
 import os
 import json
-from openai import OpenAI
+from openai import OpenAI, APITimeoutError
 from dotenv import load_dotenv
 
 load_dotenv(override=True)
@@ -8,7 +8,35 @@ load_dotenv(override=True)
 client = OpenAI(
     api_key=os.getenv("DEEPSEEK_API_KEY"),
     base_url="https://api.deepseek.com",
+    timeout=90,
+    max_retries=2,
 )
+
+
+def _clean_json_text(text: str) -> str:
+    text = text.strip()
+
+    if text.startswith("```"):
+        lines = text.splitlines()
+        if lines and lines[0].startswith("```"):
+            lines = lines[1:]
+        if lines and lines[-1].startswith("```"):
+            lines = lines[:-1]
+        text = "\n".join(lines).strip()
+
+    return text
+
+
+def _safe_json_loads(text: str) -> dict:
+    text = _clean_json_text(text)
+
+    start = text.find("{")
+    end = text.rfind("}")
+    if start != -1 and end != -1 and end > start:
+        text = text[start:end + 1]
+
+    return json.loads(text)
+
 
 def analyze_entry(content: str) -> dict:
     prompt = f"""
@@ -43,18 +71,10 @@ def analyze_entry(content: str) -> dict:
             stream=False,
         )
 
-        text = response.choices[0].message.content.strip()
+        text = response.choices[0].message.content or ""
         print("模型原始输出：", repr(text))
 
-        if text.startswith("```"):
-            lines = text.splitlines()
-            if lines and lines[0].startswith("```"):
-                lines = lines[1:]
-            if lines and lines[-1].startswith("```"):
-                lines = lines[:-1]
-            text = "\n".join(lines).strip()
-
-        result = json.loads(text)
+        result = _safe_json_loads(text)
 
         return {
             "summary": result.get("summary", ""),
@@ -62,18 +82,32 @@ def analyze_entry(content: str) -> dict:
             "todos": result.get("todos", []),
         }
 
-    except Exception as e:
-        print("AI 分析失败：", repr(e))
+    except APITimeoutError:
+        print("AI 分析失败：请求超时")
         return {
-            "summary": "AI 总结生成失败",
-            "mood": "平静",
+            "summary": "",
+            "mood": "",
             "todos": [],
         }
 
+    except Exception as e:
+        print("AI 分析失败：", e)
+        return {
+            "summary": "",
+            "mood": "",
+            "todos": [],
+        }
+
+
 def generate_weekly_report(entries: list[dict]) -> dict:
+    valid_entries = [
+        item for item in entries
+        if item.get("content")
+    ]
+
     content_text = "\n\n".join([
         f"日期: {item['created_at']}\n原文: {item['content']}\n总结: {item['summary']}\n情绪: {item['mood']}\n待办: {', '.join(item['todos']) if item['todos'] else '无'}"
-        for item in entries
+        for item in valid_entries
     ])
 
     prompt = f"""
@@ -108,17 +142,8 @@ def generate_weekly_report(entries: list[dict]) -> dict:
             stream=False,
         )
 
-        text = response.choices[0].message.content.strip()
-
-        if text.startswith("```"):
-            lines = text.splitlines()
-            if lines and lines[0].startswith("```"):
-                lines = lines[1:]
-            if lines and lines[-1].startswith("```"):
-                lines = lines[:-1]
-            text = "\n".join(lines).strip()
-
-        result = json.loads(text)
+        text = response.choices[0].message.content or ""
+        result = _safe_json_loads(text)
 
         return {
             "weekly_summary": result.get("weekly_summary", ""),
@@ -127,10 +152,20 @@ def generate_weekly_report(entries: list[dict]) -> dict:
             "next_week_suggestion": result.get("next_week_suggestion", ""),
         }
 
-    except Exception:
+    except APITimeoutError:
+        return {
+            "weekly_summary": "周报生成超时，请稍后重试",
+            "mood_overview": "暂无",
+            "key_todos": [],
+            "next_week_suggestion": "稍后再试一次",
+        }
+
+    except Exception as e:
+        print("周报生成失败：", e)
         return {
             "weekly_summary": "周报生成失败",
             "mood_overview": "暂无",
             "key_todos": [],
             "next_week_suggestion": "请稍后重试",
         }
+
