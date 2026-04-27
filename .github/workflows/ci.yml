@@ -23,15 +23,21 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          pip install ruff pytest
 
       - name: Check syntax
         run: |
           python -m compileall .
 
-      - name: Smoke test app import
+      - name: Run ruff
+        run: |
+          ruff check . --select=E9,F63,F7,F82
+
+      - name: Run pytest
         env:
           JWT_SECRET_KEY: test-secret
           DATABASE_URL: sqlite:///./test.db
           DEEPSEEK_API_KEY: test-key
         run: |
-          python -c "from app import app; print(app.title)"
+          pytest
+          
