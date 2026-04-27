@@ -8,34 +8,165 @@
 </head>
 <body>
     <h1>AI 日记助手</h1>
+    <div id="authBox" class="card">
+        <h2>登录 / 注册</h2>
+        <input id="authUsername" type="text" placeholder="用户名（注册时填写）" />
+        <input id="authEmail" type="email" placeholder="邮箱" />
+        <input id="authPassword" type="password" placeholder="密码" />
 
-    <div class="card">
-        <h2>写一条今天的日记</h2>
-        <textarea id="content" placeholder="请输入今天的记录..."></textarea>
-        <br />
-        <button onclick="submitEntry()" id="submitBtn">提交</button>
-        <button onclick="loadWeeklyReport()" id="weeklyBtn" class="secondary-btn" onClick="loadWeeklyReport()">生成本周周报</button>
-    </div>
-
-    <div class="card" id="weeklyReportCard" style="display: none;">
-        <h2>本周周报</h2>
-
-        <div id="weeklyLoading" class="loading-box" style="display: none;">
-            正在分析本周记录...
+        <div class="button-row">
+            <button onclick="register()">注册</button>
+            <button onclick="login()">登录</button>
         </div>
 
-        <div id="weeklyReportContent" style="display: none;">
-            <p id="weeklySummary"></p>
-            <p id="moodOverview"></p>
-
-            <h3>本周重点待办</h3>
-            <ul id="weeklyTodos"></ul>
-
-            <p id="nextWeekSuggestion"></p>
-        </div>
+        <p id="authMessage"></p>
     </div>
-    <div id="entries"></div>
+    <div id="appBox" style="display:none;">
+        <div class="card">
+            <p id="currentUserText"></p>
+            <h2>写一条今天的日记</h2>
+            <textarea id="content" placeholder="请输入今天的记录..."></textarea>
+            <br />
+            <div class="button-row">
+                <button onclick="submitEntry()" id="submitBtn">提交</button>
+                <button onclick="loadWeeklyReport()" id="weeklyBtn" class="secondary-btn">生成本周周报</button>
+                <button onclick="logout()">退出登录</button>
+            </div>
+        </div>
+
+        <div class="card" id="weeklyReportCard" style="display: none;">
+            <h2>本周周报</h2>
+
+            <div id="weeklyLoading" class="loading-box" style="display: none;">
+                正在分析本周记录...
+            </div>
+
+            <div id="weeklyReportContent" style="display: none;">
+                <p id="weeklySummary"></p>
+                <p id="moodOverview"></p>
+
+                <h3>本周重点待办</h3>
+                <ul id="weeklyTodos"></ul>
+
+                <p id="nextWeekSuggestion"></p>
+            </div>
+        </div>
+        <div id="entries"></div>
+    </div>
     <script>
+        function setAuthMessage(msg) {
+            document.getElementById("authMessage").textContent = msg;
+        }
+
+        function getToken() {
+            return localStorage.getItem("token");
+        }
+
+        function showApp() {
+            const token = getToken();
+
+            if (token) {
+                document.getElementById("authBox").style.display = "none";
+                document.getElementById("appBox").style.display = "block";
+                loadCurrentUser();
+                loadEntries();
+            } else {
+                document.getElementById("authBox").style.display = "block";
+                document.getElementById("appBox").style.display = "none";
+            }
+        }
+
+        async function loadCurrentUser() {
+            const token = getToken();
+            if (!token) return;
+
+            const res = await fetch("/me", {
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            });
+
+            if (res.status === 401) {
+                localStorage.removeItem("token");
+                setAuthMessage("登录已过期，请重新登录");
+                showApp();
+                return;
+            }
+
+            if (!res.ok) {
+                console.error("获取当前用户失败");
+                return;
+            }
+
+            const data = await res.json();
+            document.getElementById("currentUserText").textContent = `你好，${data.username}`;
+        }
+
+        async function register() {
+            const username = document.getElementById("authUsername").value.trim();
+            const email = document.getElementById("authEmail").value.trim();
+            const password = document.getElementById("authPassword").value.trim();
+
+            if (!username || !email || !password) {
+                setAuthMessage("注册时请把用户名、邮箱、密码都填完整");
+                return;
+            }
+
+            const res = await fetch("/register", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ username, email, password })
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                setAuthMessage(data.detail || "注册失败");
+                return;
+            }
+
+            setAuthMessage("注册成功，请直接登录");
+        }
+
+        async function login() {
+            const email = document.getElementById("authEmail").value.trim();
+            const password = document.getElementById("authPassword").value.trim();
+
+            if (!email || !password) {
+                setAuthMessage("登录时请输入邮箱和密码");
+                return;
+            }
+
+            const formData = new URLSearchParams();
+            formData.append("username", email);
+            formData.append("password", password);
+
+            const res = await fetch("/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: formData
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                setAuthMessage(data.detail || "登录失败");
+                return;
+            }
+
+            localStorage.setItem("token", data.access_token);
+            setAuthMessage("登录成功");
+            showApp();
+        }
+
+        function logout() {
+            localStorage.removeItem("token");
+            location.reload();
+        }
         async function loadEntries() {
             const container = document.getElementById("entries");
 
@@ -44,7 +175,18 @@
                 return;
             }
 
-            const res = await fetch("/entries");
+            const token = getToken();
+            const res = await fetch("/entries", {
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            });
+            if (res.status === 401) {
+                localStorage.removeItem("token");
+                setAuthMessage("登录已过期，请重新登录");
+                showApp();
+                return;
+            }
 
             if (!res.ok) {
                 throw new Error("获取日记列表失败");
@@ -73,6 +215,7 @@
                         ${todosHtml}
 
                         <div class="meta">创建时间：${formatDate(entry.created_at)}</div>
+                        <button onclick="deleteEntry(${entry.id})">删除</button>
                     </div>
                 `;
 
@@ -81,6 +224,7 @@
         }
 
         async function submitEntry() {
+            const token = getToken();
             const contentInput = document.getElementById("content")
             const button = document.getElementById("submitBtn")
             const content = document.getElementById("content").value.trim();
@@ -94,10 +238,11 @@
             button.textContent = "分析中..."
 
             try{
-                const res = await fetch("/entries",{
+                const res = await fetch("/entries", {
                     method: "POST",
                     headers: {
-                        "content-type": "application/json"
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
                     },
                     body: JSON.stringify({ content })
                 })
@@ -115,12 +260,11 @@
                 button.disabled = false
                 button.textContent = "提交"
             }
-
-            document.getElementById("content").value = "";
-            await loadEntries();
         }
 
-        loadEntries();
+        window.onload = showApp;
+
+
 
         function formatDate(dateString) {
             const date = new Date(dateString);
@@ -135,12 +279,16 @@
         }
 
         async function deleteEntry(entryId) {
+            const token = getToken();
             const ok = confirm("确认删除这条日记吗？");
             if (!ok) return;
 
             try {
                 const res = await fetch(`/entries/${entryId}`, {
-                    method: "DELETE"
+                    method: "DELETE",
+                    headers: {
+                        "Authorization": `Bearer ${token}`
+                    }
                 });
 
                 if (!res.ok) {
@@ -159,6 +307,7 @@
         async function loadWeeklyReport() {
             if (weeklyReportLoading) return;
 
+            const token = getToken();
             const btn = document.getElementById("weeklyBtn");
             const card = document.getElementById("weeklyReportCard");
             const loadingBox = document.getElementById("weeklyLoading");
@@ -177,7 +326,11 @@
             todosEl.innerHTML = "";
 
             try {
-                const res = await fetch("/weekly-report");
+                const res = await fetch("/weekly-report", {
+                    headers: {
+                        "Authorization": `Bearer ${token}`
+                    }
+                });
 
                 if (!res.ok) {
                     throw new Error("周报请求失败");
@@ -214,13 +367,6 @@
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
 
 
 

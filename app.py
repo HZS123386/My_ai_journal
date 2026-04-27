@@ -91,6 +91,10 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 
     return {"access_token": access_token, "token_type": "bearer"}
 
+@app.get("/me", response_model=UserResponse, summary="获取当前登录用户")
+def get_me(current_user: User = Depends(get_current_user)):
+    return current_user
+
 #首页
 @app.get("/", summary="首页")
 def home(request: Request):
