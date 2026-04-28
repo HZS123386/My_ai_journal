@@ -38,6 +38,7 @@ jobs:
           JWT_SECRET_KEY: test-secret
           DATABASE_URL: sqlite:///./test.db
           DEEPSEEK_API_KEY: test-key
+          PYTHONPATH: .
         run: |
-          pytest
+          pytest tests -v
           
