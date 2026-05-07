@@ -1,6 +1,7 @@
-from fastapi import FastAPI, Depends, Request, HTTPException
+from fastapi import FastAPI, Depends, Request, HTTPException, File, UploadFile
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
+from file_parser import parse_file
 from sqlalchemy.orm import Session
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
@@ -14,7 +15,7 @@ from schemas import (
     UserResponse,
     TokenResponse,
 )
-from ai_service import analyze_entry, generate_weekly_report as generate_weekly_report_ai
+from ai_service import analyze_entry, generate_weekly_report as generate_weekly_report_ai, summarize_file_content
 from auth import hash_password, verify_password, create_access_token, decode_access_token
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
@@ -201,4 +202,42 @@ def weekly_report(
     ]
 
     return generate_weekly_report_ai(entry_data)
+
+# 文件上传并总结
+@app.post("/upload-file", summary="上传文件并总结")
+async def upload_file(
+        file: UploadFile = File(...),
+        current_user: User = Depends(get_current_user)
+):
+    # 检查文件类型
+    allowed_extensions = ['.txt', '.docx', '.xlsx', '.pdf']
+    file_extension = '.' + file.filename.split('.')[-1].lower()
+    
+    if file_extension not in allowed_extensions:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"不支持的文件格式。支持的格式：{', '.join(allowed_extensions)}"
+        )
+    
+    # 读取文件内容
+    try:
+        file_content = await file.read()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="文件读取失败")
+    
+    # 解析文件
+    parsed_content = parse_file(file_content, file.filename)
+    if parsed_content is None:
+        raise HTTPException(status_code=400, detail="无法解析该文件")
+    
+    # AI 总结
+    ai_result = summarize_file_content(parsed_content)
+    
+    return {
+        "filename": file.filename,
+        "content_length": len(parsed_content),
+        "summary": ai_result["summary"],
+        "key_points": ai_result["key_points"],
+        "category": ai_result["category"],
+    }
 

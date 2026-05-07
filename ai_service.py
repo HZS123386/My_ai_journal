@@ -169,3 +169,68 @@ def generate_weekly_report(entries: list[dict]) -> dict:
             "next_week_suggestion": "请稍后重试",
         }
 
+def summarize_file_content(content: str) -> dict:
+    """
+    对文件内容进行 AI 总结
+    """
+    # 限制内容长度，避免超出模型 token 限制
+    max_content_length = 8000
+    if len(content) > max_content_length:
+        content = content[:max_content_length] + "\n\n（内容已截断，以上为部分内容）"
+    
+    prompt = f"""
+你是一个文档总结助手。请阅读下面的文档内容并进行总结。
+
+要求：
+1. summary: 用一段中文总结文档的主要内容，不超过200字
+2. key_points: 提取文档中的关键点，返回字符串数组
+3. category: 根据内容判断文档类别，从以下选项中选一个：
+   工作报告、会议记录、学术论文、个人笔记、数据分析、其他
+
+文档内容：
+{content}
+
+返回格式：
+{{
+  "summary": "文档总结",
+  "key_points": ["关键点1", "关键点2", "关键点3"],
+  "category": "文档类别"
+}}
+"""
+
+    try:
+        response = client.chat.completions.create(
+            model="deepseek-chat",
+            messages=[
+                {"role": "system", "content": "你是一个专业的文档总结助手，只返回 JSON。"},
+                {"role": "user", "content": prompt},
+            ],
+            stream=False,
+        )
+
+        text = response.choices[0].message.content or ""
+        result = _safe_json_loads(text)
+
+        return {
+            "summary": result.get("summary", ""),
+            "key_points": result.get("key_points", []),
+            "category": result.get("category", "其他"),
+        }
+
+    except APITimeoutError:
+        return {
+            "summary": "总结生成超时，请稍后重试",
+            "key_points": [],
+            "category": "其他",
+        }
+
+    except Exception as e:
+        print("文档总结失败：", e)
+        return {
+            "summary": "总结生成失败",
+            "key_points": [],
+            "category": "其他",
+        }
+
+
+

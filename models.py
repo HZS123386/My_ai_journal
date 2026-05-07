@@ -12,6 +12,9 @@ class User(Base):
     email = Column(String, unique=True, nullable=False, index=True)
     password_hash = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+    phone = Column(String, unique=True, nullable=True, index=True)
+    # phone_verified = Column(Boolean, default=False, nullable=False)
+    # phone_verified_at = Column(DateTime, nullable=True)
 
     entries = relationship('Entry', back_populates='user',cascade='all, delete-orphan')
 
