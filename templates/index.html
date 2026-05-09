@@ -4,58 +4,243 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AI 日记助手</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}">
 </head>
 <body>
-    <h1>AI 日记助手</h1>
-    <div id="authBox" class="card">
-        <h2>登录 / 注册</h2>
-        <input id="authUsername" type="text" placeholder="用户名（注册时填写）" />
-        <input id="authEmail" type="email" placeholder="邮箱" />
-        <input id="authPassword" type="password" placeholder="密码" />
-
-        <div class="button-row">
-            <button onclick="register()">注册</button>
-            <button onclick="login()">登录</button>
+    <div class="app-container">
+        <!-- 背景装饰 -->
+        <div class="bg-decoration" aria-hidden="true">
+            <div class="bg-pattern"></div>
         </div>
 
-        <p id="authMessage"></p>
+        <!-- 侧边栏 -->
+        <aside class="sidebar" id="sidebar" role="navigation" aria-label="侧边导航">
+            <!-- 侧边栏头部 -->
+            <div class="sidebar-header">
+                <div class="user-avatar" role="button" tabindex="0" aria-label="用户头像">
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=user" alt="用户头像" class="avatar-img">
+                    <span class="avatar-text" id="sidebarUserName"></span>
+                </div>
+            </div>
+
+            <!-- 新对话按钮 -->
+            <button class="btn btn-primary btn-new-chat" onclick="newEntry()" aria-label="新建日记">
+                <span>新日记</span>
+            </button>
+
+            <!-- 侧边栏菜单 -->
+            <nav class="sidebar-menu" aria-label="侧边栏菜单">
+                <button class="sidebar-menu-item" onclick="window.location.href='/upload'" aria-label="文件上传">
+                    <span>文件上传</span>
+                </button>
+            </nav>
+
+            <!-- 历史记录区域 -->
+            <div class="history-section">
+                <div class="history-header">
+                    <span class="history-title">历史记录</span>
+                </div>
+                <div class="history-list" id="historyList" role="list"></div>
+            </div>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="main-content" role="main" id="mainContent">
+            <!-- 导航栏 -->
+            <nav class="navbar" role="navigation" aria-label="主导航">
+                <div class="navbar-content">
+                    <div class="nav-left">
+                        <button class="navbar-sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" aria-label="切换侧边栏显示">
+                            <span class="toggle-icon">☰</span>
+                        </button>
+                        <div class="nav-brand">
+                            <span class="brand-text">AI 日记助手</span>
+                        </div>
+                    </div>
+                    <div class="nav-actions">
+                        <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="切换主题">
+                            <span class="theme-icon">🌙</span>
+                            <span class="theme-text">深色</span>
+                        </button>
+                        <div class="user-info-nav">
+                            <span class="user-greeting-nav">你好</span>
+                            <span class="user-name-nav" id="currentUserText"></span>
+                        </div>
+                        <button class="btn btn-ghost btn-sm" onclick="logout()" aria-label="退出登录">
+                            <span>退出</span>
+                        </button>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- 内容区域 -->
+            <div class="content-wrapper">
+                <!-- 认证区域 -->
+                <section class="auth-container" id="authBox" aria-labelledby="authTitle">
+                    <div class="auth-card">
+                        <div class="auth-header">
+                            <h2 class="auth-title" id="authTitle">欢迎回来</h2>
+                            <p class="auth-subtitle">登录或注册开始记录您的每一天</p>
+                        </div>
+
+                        <form class="auth-form" novalidate>
+                            <div class="form-group">
+                                <label class="form-label" for="authUsername">用户名</label>
+                                <div class="input-wrapper">
+                                    <input id="authUsername" type="text" 
+                                           name="username"
+                                           placeholder="请输入用户名" 
+                                           autocomplete="username"
+                                           aria-required="true"
+                                           aria-describedby="usernameHint" />
+                                </div>
+                                <span class="input-helper" id="usernameHint">用于登录和显示的用户名</span>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="authEmail">邮箱</label>
+                                <div class="input-wrapper">
+                                    <input id="authEmail" type="email" 
+                                           name="email"
+                                           placeholder="请输入邮箱" 
+                                           autocomplete="email"
+                                           aria-required="true"
+                                           aria-describedby="emailHint" />
+                                </div>
+                                <span class="input-helper" id="emailHint">用于接收通知和找回密码</span>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="authPassword">密码</label>
+                                <div class="input-wrapper">
+                                    <input id="authPassword" type="password" 
+                                           name="password"
+                                           placeholder="请输入密码" 
+                                           autocomplete="current-password"
+                                           aria-required="true"
+                                           aria-describedby="passwordHint" />
+                                    <button class="toggle-password" 
+                                            type="button"
+                                            onclick="togglePassword()"
+                                            aria-label="显示或隐藏密码"
+                                            aria-pressed="false">
+                                        <span class="toggle-text">显示</span>
+                                    </button>
+                                </div>
+                                <span class="input-helper" id="passwordHint">至少6个字符</span>
+                            </div>
+
+                            <div class="auth-message" id="authMessage" role="alert" aria-live="polite"></div>
+
+                            <div class="auth-actions">
+                                <button type="button" class="btn btn-primary" onclick="register()" aria-label="注册新账户">
+                                    <span>注册</span>
+                                </button>
+                                <button type="button" class="btn btn-secondary" onclick="login()" aria-label="登录现有账户">
+                                    <span>登录</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- 应用区域 -->
+                <section id="appBox" class="app-container-content" aria-labelledby="appTitle">
+                    <!-- 写日记卡片 -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title" id="appTitle">
+                                <span>写一条今天的日记</span>
+                            </h2>
+                        </div>
+                        <div class="card-body">
+                            <textarea id="content" 
+                                      placeholder="今天发生了什么有趣的事情？记录下来吧..."
+                                      aria-label="日记内容输入框"
+                                      aria-describedby="contentHint"
+                                      rows="6"></textarea>
+                            <span class="input-helper" id="contentHint">记录您的想法、感受和经历</span>
+                        </div>
+                        <div class="card-footer">
+                            <div class="button-row">
+                                <button class="btn btn-primary" onclick="submitEntry()" id="submitBtn" aria-label="提交日记">
+                                    <span>提交</span>
+                                </button>
+                                <button class="btn btn-outline" onclick="loadWeeklyReport()" id="weeklyBtn" aria-label="生成本周周报">
+                                    <span>生成本周周报</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 周报卡片 -->
+                    <div class="card weekly-report-card" id="weeklyReportCard" aria-labelledby="weeklyReportTitle">
+                        <div class="card-header">
+                            <h2 class="card-title" id="weeklyReportTitle">
+                                <span>本周周报</span>
+                            </h2>
+                        </div>
+                        <div class="card-body">
+                            <div id="weeklyLoading" class="loading-container" aria-live="polite">
+                                <div class="loading-spinner" aria-hidden="true"></div>
+                                <span>正在分析本周记录...</span>
+                            </div>
+                            <div id="weeklyReportContent" aria-live="polite">
+                                <div class="report-section">
+                                    <div class="section-content">
+                                        <h3 class="section-title">本周总结</h3>
+                                        <p id="weeklySummary"></p>
+                                    </div>
+                                </div>
+
+                                <div class="report-section">
+                                    <div class="section-content">
+                                        <h3 class="section-title">情绪概览</h3>
+                                        <p id="moodOverview"></p>
+                                    </div>
+                                </div>
+
+                                <div class="report-section">
+                                    <div class="section-content">
+                                        <h3 class="section-title">本周重点待办</h3>
+                                        <ul id="weeklyTodos" class="todo-list" role="list"></ul>
+                                    </div>
+                                </div>
+
+                                <div class="report-section">
+                                    <div class="section-content">
+                                        <h3 class="section-title">下周建议</h3>
+                                        <p id="nextWeekSuggestion"></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 日记列表 -->
+                    <div id="entries" class="entries-container" aria-live="polite"></div>
+                </section>
+            </div>
+        </main>
+
+        <!-- Toast 提示 -->
+        <div class="toast-container" id="toastContainer" role="status" aria-live="polite">
+            <div class="toast" id="toast" role="alert">
+                <div class="toast-content">
+                    <span class="toast-message" id="toastMessage"></span>
+                </div>
+            </div>
+        </div>
     </div>
-    <div id="appBox" style="display:none;">
-        <div class="card">
-            <p id="currentUserText"></p>
-            <h2>写一条今天的日记</h2>
-            <textarea id="content" placeholder="请输入今天的记录..."></textarea>
-            <br />
-            <div class="button-row">
-                <button onclick="submitEntry()" id="submitBtn">提交</button>
-                <button onclick="loadWeeklyReport()" id="weeklyBtn" class="secondary-btn">生成本周周报</button>
-                <button onclick="logout()">退出登录</button>
-            </div>
-        </div>
 
-        <div class="card" id="weeklyReportCard" style="display: none;">
-            <h2>本周周报</h2>
-
-            <div id="weeklyLoading" class="loading-box" style="display: none;">
-                正在分析本周记录...
-            </div>
-
-            <div id="weeklyReportContent" style="display: none;">
-                <p id="weeklySummary"></p>
-                <p id="moodOverview"></p>
-
-                <h3>本周重点待办</h3>
-                <ul id="weeklyTodos"></ul>
-
-                <p id="nextWeekSuggestion"></p>
-            </div>
-        </div>
-        <div id="entries"></div>
-    </div>
     <script>
         function setAuthMessage(msg) {
-            document.getElementById("authMessage").textContent = msg;
+            const authMessage = document.getElementById("authMessage");
+            authMessage.textContent = msg;
+            authMessage.style.display = msg ? "block" : "none";
         }
 
         function getToken() {
@@ -64,15 +249,31 @@
 
         function showApp() {
             const token = getToken();
-
+            const authBox = document.getElementById("authBox");
+            const appBox = document.getElementById("appBox");
+            const sidebar = document.getElementById("sidebar");
+            const isDesktop = window.innerWidth >= 1024;
+            
             if (token) {
-                document.getElementById("authBox").style.display = "none";
-                document.getElementById("appBox").style.display = "block";
+                authBox.style.display = "none";
+                appBox.style.display = "block";
+                sidebar.style.display = "flex";
+                
+                if (isDesktop) {
+                    sidebar.classList.add("sidebar-visible");
+                    sidebar.classList.remove("sidebar-hidden");
+                } else {
+                    sidebar.classList.add("sidebar-hidden");
+                    sidebar.classList.remove("sidebar-visible");
+                }
+                
                 loadCurrentUser();
                 loadEntries();
+                loadHistory();
             } else {
-                document.getElementById("authBox").style.display = "block";
-                document.getElementById("appBox").style.display = "none";
+                authBox.style.display = "block";
+                appBox.style.display = "none";
+                sidebar.style.display = "none";
             }
         }
 
@@ -80,26 +281,40 @@
             const token = getToken();
             if (!token) return;
 
-            const res = await fetch("/me", {
-                headers: {
-                    "Authorization": `Bearer ${token}`
+            try {
+                const res = await fetch("/me", {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+
+                if (res.status === 401) {
+                    localStorage.removeItem("token");
+                    setAuthMessage("登录已过期，请重新登录");
+                    showApp();
+                    return;
                 }
-            });
 
-            if (res.status === 401) {
-                localStorage.removeItem("token");
-                setAuthMessage("登录已过期，请重新登录");
-                showApp();
-                return;
+                if (!res.ok) {
+                    console.error("获取当前用户失败");
+                    return;
+                }
+
+                const data = await res.json();
+                document.getElementById("currentUserText").textContent = data.username;
+                document.getElementById("sidebarUserName").textContent = data.username;
+            } catch (error) {
+                console.error("加载用户信息失败:", error);
             }
+        }
 
-            if (!res.ok) {
-                console.error("获取当前用户失败");
-                return;
-            }
-
-            const data = await res.json();
-            document.getElementById("currentUserText").textContent = `你好，${data.username}`;
+        function togglePassword() {
+            const passwordInput = document.getElementById("authPassword");
+            const toggleBtn = document.querySelector('.toggle-password');
+            const toggleText = toggleBtn.querySelector('.toggle-text');
+            const isPassword = passwordInput.type === "password";
+            
+            passwordInput.type = isPassword ? "text" : "password";
+            toggleText.textContent = isPassword ? "隐藏" : "显示";
+            toggleBtn.setAttribute('aria-pressed', isPassword ? 'true' : 'false');
         }
 
         async function register() {
@@ -112,22 +327,25 @@
                 return;
             }
 
-            const res = await fetch("/register", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ username, email, password })
-            });
+            try {
+                const res = await fetch("/register", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, email, password })
+                });
 
-            const data = await res.json();
+                const data = await res.json();
 
-            if (!res.ok) {
-                setAuthMessage(data.detail || "注册失败");
-                return;
+                if (!res.ok) {
+                    setAuthMessage(data.detail || "注册失败");
+                    return;
+                }
+
+                setAuthMessage("注册成功，请登录");
+            } catch (error) {
+                setAuthMessage("网络错误，请稍后重试");
+                console.error("注册失败:", error);
             }
-
-            setAuthMessage("注册成功，请直接登录");
         }
 
         async function login() {
@@ -139,105 +357,220 @@
                 return;
             }
 
-            const formData = new URLSearchParams();
-            formData.append("username", email);
-            formData.append("password", password);
+            try {
+                const formData = new URLSearchParams();
+                formData.append("username", email);
+                formData.append("password", password);
 
-            const res = await fetch("/login", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded"
-                },
-                body: formData
-            });
+                const res = await fetch("/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    body: formData
+                });
 
-            const data = await res.json();
+                const data = await res.json();
 
-            if (!res.ok) {
-                setAuthMessage(data.detail || "登录失败");
-                return;
+                if (!res.ok) {
+                    setAuthMessage(data.detail || "登录失败");
+                    return;
+                }
+
+                localStorage.setItem("token", data.access_token);
+                showToast("登录成功", "success");
+                showApp();
+            } catch (error) {
+                setAuthMessage("网络错误，请稍后重试");
+                console.error("登录失败:", error);
             }
-
-            localStorage.setItem("token", data.access_token);
-            setAuthMessage("登录成功");
-            showApp();
         }
 
         function logout() {
             localStorage.removeItem("token");
             location.reload();
         }
-        async function loadEntries() {
-            const container = document.getElementById("entries");
 
-            if (!container) {
-                console.error("找不到 #entries 容器");
-                return;
-            }
+        function newEntry() {
+            document.getElementById("content").value = "";
+            document.getElementById("content").focus();
+            document.getElementById("entries").scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        async function loadHistory() {
+            const container = document.getElementById("historyList");
+            if (!container) return;
 
             const token = getToken();
-            const res = await fetch("/entries", {
-                headers: {
-                    "Authorization": `Bearer ${token}`
+            
+            try {
+                const res = await fetch("/entries", {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+
+                if (res.status === 401) {
+                    localStorage.removeItem("token");
+                    showApp();
+                    return;
                 }
-            });
-            if (res.status === 401) {
-                localStorage.removeItem("token");
-                setAuthMessage("登录已过期，请重新登录");
-                showApp();
-                return;
+
+                if (!res.ok) {
+                    throw new Error("获取历史记录失败");
+                }
+
+                const data = await res.json();
+                container.innerHTML = "";
+
+                if (data.length === 0) {
+                    container.innerHTML = `
+                        <div class="history-empty" role="status">
+                            <span>暂无历史记录</span>
+                        </div>
+                    `;
+                    return;
+                }
+
+                data.forEach(entry => {
+                    const preview = entry.content.substring(0, 40) + (entry.content.length > 40 ? "..." : "");
+                    const html = `
+                        <button class="history-item" 
+                                onclick="viewEntry(${entry.id})"
+                                aria-label="查看日记: ${preview}">
+                            <span class="history-preview">${preview}</span>
+                            <span class="history-date">${formatDate(entry.created_at)}</span>
+                        </button>
+                    `;
+                    container.innerHTML += html;
+                });
+            } catch (error) {
+                console.error("加载历史记录失败:", error);
             }
+        }
 
-            if (!res.ok) {
-                throw new Error("获取日记列表失败");
+        async function viewEntry(entryId) {
+            const token = getToken();
+            try {
+                const res = await fetch(`/entries/${entryId}`, {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+
+                if (!res.ok) {
+                    throw new Error("获取日记详情失败");
+                }
+
+                const data = await res.json();
+                document.getElementById("content").value = data.content;
+                document.getElementById("content").focus();
+                
+                const element = document.getElementById("content");
+                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } catch (error) {
+                console.error("查看日记失败:", error);
+                showToast("查看失败", "error");
             }
+        }
 
-            const data = await res.json();
-            container.innerHTML = "";
+        async function loadEntries() {
+            const container = document.getElementById("entries");
+            if (!container) return;
 
-            data.forEach(entry => {
-                const todosHtml = (entry.todos || []).length
-                    ? `<ul>${entry.todos.map(todo => `<li>${todo}</li>`).join("")}</ul>`
-                    : `<p>暂无待办</p>`;
+            const token = getToken();
+            
+            try {
+                const res = await fetch("/entries", {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
 
-                const html = `
-                    <div class="card">
-                        <h3>原文</h3>
-                        <p>${entry.content}</p>
+                if (res.status === 401) {
+                    localStorage.removeItem("token");
+                    setAuthMessage("登录已过期，请重新登录");
+                    showApp();
+                    return;
+                }
 
-                        <h3>AI 总结</h3>
-                        <p>${entry.summary || "暂无总结"}</p>
+                if (!res.ok) {
+                    throw new Error("获取日记列表失败");
+                }
 
-                        <h3>情绪</h3>
-                        <div class="mood mood-${entry.mood || "未知"}">${entry.mood || "未知"}</div>
+                const data = await res.json();
+                container.innerHTML = "";
 
-                        <h3>待办事项</h3>
-                        ${todosHtml}
+                if (data.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state" role="status">
+                            <p>暂无日记记录，开始写第一篇吧！</p>
+                        </div>
+                    `;
+                    return;
+                }
 
-                        <div class="meta">创建时间：${formatDate(entry.created_at)}</div>
-                        <button onclick="deleteEntry(${entry.id})">删除</button>
+                data.forEach(entry => {
+                    const todosHtml = (entry.todos || []).length
+                        ? `<ul class="todo-list" role="list">${entry.todos.map((todo, i) => `<li role="listitem"><span class="todo-number">${i + 1}</span>${todo}</li>`).join("")}</ul>`
+                        : `<p class="no-todo">暂无待办</p>`;
+
+                    const html = `
+                        <article class="card entry-card animate-fadeIn" aria-labelledby="entry-${entry.id}-title">
+                            <div class="entry-header">
+                                <div class="entry-mood mood-${entry.mood || "未知"}" aria-label="心情: ${entry.mood || '未知'}">
+                                    <span>${entry.mood || "未知"}</span>
+                                </div>
+                                <div class="entry-meta">${formatDate(entry.created_at)}</div>
+                            </div>
+
+                            <div class="entry-section">
+                                <h3 class="section-title" id="entry-${entry.id}-title">原文</h3>
+                                <p class="entry-content">${entry.content}</p>
+                            </div>
+
+                            <div class="entry-section">
+                                <h3 class="section-title">AI 总结</h3>
+                                <p class="entry-summary">${entry.summary || "暂无总结"}</p>
+                            </div>
+
+                            <div class="entry-section">
+                                <h3 class="section-title">待办事项</h3>
+                                ${todosHtml}
+                            </div>
+
+                            <button class="btn btn-danger btn-sm" 
+                                    onclick="deleteEntry(${entry.id})" 
+                                    aria-label="删除这条日记">
+                                <span>删除</span>
+                            </button>
+                        </article>
+                    `;
+
+                    container.innerHTML += html;
+                });
+            } catch (error) {
+                console.error("加载日记失败:", error);
+                container.innerHTML = `
+                    <div class="empty-state" role="status">
+                        <p>加载失败，请刷新页面重试</p>
                     </div>
                 `;
-
-                container.innerHTML += html;
-            });
+            }
         }
 
         async function submitEntry() {
             const token = getToken();
-            const contentInput = document.getElementById("content")
-            const button = document.getElementById("submitBtn")
-            const content = document.getElementById("content").value.trim();
-
+            const contentInput = document.getElementById("content");
+            const button = document.getElementById("submitBtn");
+            const content = contentInput.value.trim();
+            
             if (!content) {
-                alert("请输入日记内容");
+                showToast("请输入日记内容", "warning");
+                contentInput.focus();
                 return;
             }
 
-            button.disabled = true
-            button.textContent = "分析中..."
+            button.disabled = true;
+            button.classList.add("is-loading");
+            button.innerHTML = `
+                <div class="btn-spinner" aria-hidden="true"></div>
+                <span>分析中...</span>
+            `;
 
-            try{
+            try {
                 const res = await fetch("/entries", {
                     method: "POST",
                     headers: {
@@ -245,37 +578,38 @@
                         "Authorization": `Bearer ${token}`
                     },
                     body: JSON.stringify({ content })
-                })
+                });
+
                 if (!res.ok) {
-                    alert("提交失败");
+                    showToast("提交失败", "error");
                     return;
                 }
 
-                contentInput.value=""
-                await loadEntries()
+                contentInput.value = "";
+                showToast("提交成功", "success");
+                await loadEntries();
+                await loadHistory();
 
-            } catch(error){
-                alert("请求失败，请稍后重试")
-            }finally{
-                button.disabled = false
-                button.textContent = "提交"
+            } catch (error) {
+                showToast("请求失败，请稍后重试", "error");
+                console.error("提交日记失败:", error);
+            } finally {
+                button.disabled = false;
+                button.classList.remove("is-loading");
+                button.innerHTML = `
+                    <span>提交</span>
+                `;
             }
         }
 
-        window.onload = showApp;
-
-
-
         function formatDate(dateString) {
             const date = new Date(dateString);
-
             const year = date.getFullYear();
             const month = String(date.getMonth() + 1).padStart(2, "0");
             const day = String(date.getDate()).padStart(2, "0");
             const hours = String(date.getHours()).padStart(2, "0");
             const minutes = String(date.getMinutes()).padStart(2, "0");
-
-            return `${year}-${month}-${day} ${hours}:${minutes}`;
+            return `${month}-${day} ${hours}:${minutes}`;
         }
 
         async function deleteEntry(entryId) {
@@ -286,19 +620,21 @@
             try {
                 const res = await fetch(`/entries/${entryId}`, {
                     method: "DELETE",
-                    headers: {
-                        "Authorization": `Bearer ${token}`
-                    }
+                    headers: { "Authorization": `Bearer ${token}` }
                 });
 
                 if (!res.ok) {
-                    alert("删除失败");
+                    showToast("删除失败", "error");
                     return;
                 }
 
+                showToast("删除成功", "success");
                 await loadEntries();
+                await loadHistory();
+
             } catch (error) {
-                alert("请求失败，请稍后重试");
+                showToast("请求失败，请稍后重试", "error");
+                console.error("删除日记失败:", error);
             }
         }
 
@@ -316,20 +652,20 @@
 
             weeklyReportLoading = true;
             btn.disabled = true;
-            btn.textContent = "分析中...";
             btn.classList.add("is-loading");
+            btn.innerHTML = `
+                <div class="btn-spinner" aria-hidden="true"></div>
+                <span>分析中...</span>
+            `;
 
             card.style.display = "block";
-            loadingBox.style.display = "block";
-            loadingBox.textContent = "正在分析本周记录...";
+            loadingBox.style.display = "flex";
             contentBox.style.display = "none";
             todosEl.innerHTML = "";
 
             try {
                 const res = await fetch("/weekly-report", {
-                    headers: {
-                        "Authorization": `Bearer ${token}`
-                    }
+                    headers: { "Authorization": `Bearer ${token}` }
                 });
 
                 if (!res.ok) {
@@ -338,36 +674,118 @@
 
                 const data = await res.json();
 
-                document.getElementById("weeklySummary").textContent =
-                    "本周总结：" + (data.weekly_summary || "暂无");
-                document.getElementById("moodOverview").textContent =
-                    "情绪概览：" + (data.mood_overview || "暂无");
-                document.getElementById("nextWeekSuggestion").textContent =
-                    "下周建议：" + (data.next_week_suggestion || "暂无");
+                document.getElementById("weeklySummary").textContent = data.weekly_summary || "暂无";
+                document.getElementById("moodOverview").textContent = data.mood_overview || "暂无";
+                document.getElementById("nextWeekSuggestion").textContent = data.next_week_suggestion || "暂无";
 
-                (data.key_todos || []).forEach(todo => {
+                (data.key_todos || []).forEach((todo, i) => {
                     const li = document.createElement("li");
-                    li.textContent = todo;
+                    li.setAttribute('role', 'listitem');
+                    li.innerHTML = `<span class="todo-number">${i + 1}</span>${todo}`;
                     todosEl.appendChild(li);
                 });
 
                 loadingBox.style.display = "none";
                 contentBox.style.display = "block";
+
             } catch (error) {
-                loadingBox.style.display = "block";
-                loadingBox.textContent = "周报生成失败，请稍后重试。";
+                loadingBox.innerHTML = `
+                    <span>周报生成失败，请稍后重试</span>
+                `;
                 contentBox.style.display = "none";
+                console.error("加载周报失败:", error);
             } finally {
                 weeklyReportLoading = false;
                 btn.disabled = false;
-                btn.textContent = "生成本周周报";
                 btn.classList.remove("is-loading");
+                btn.innerHTML = `
+                    <span>生成本周周报</span>
+                `;
             }
         }
+
+        function showToast(message, type = "info") {
+            const toast = document.getElementById("toast");
+            const toastMessage = document.getElementById("toastMessage");
+
+            toastMessage.textContent = message;
+            toast.className = `toast toast-${type}`;
+
+            toast.style.display = "flex";
+
+            setTimeout(() => {
+                toast.classList.add("toast-hide");
+                setTimeout(() => {
+                    toast.style.display = "none";
+                    toast.classList.remove("toast-hide");
+                }, 300);
+            }, 3000);
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById("sidebar");
+            const mainContent = document.getElementById("mainContent");
+            const sidebarToggle = document.getElementById("sidebarToggle");
+            
+            const isVisible = sidebar.classList.contains("sidebar-visible");
+            
+            if (isVisible) {
+                sidebar.classList.remove("sidebar-visible");
+                sidebar.classList.add("sidebar-hidden");
+                mainContent.classList.remove("main-content-expanded");
+            } else {
+                sidebar.classList.remove("sidebar-hidden");
+                sidebar.classList.add("sidebar-visible");
+                mainContent.classList.add("main-content-expanded");
+            }
+            
+            sidebarToggle.setAttribute('aria-expanded', !isVisible);
+            sidebar.setAttribute('aria-hidden', isVisible);
+        }
+
+        function getTheme() {
+            return localStorage.getItem("theme") || "dark";
+        }
+
+        function setTheme(theme) {
+            localStorage.setItem("theme", theme);
+            const html = document.documentElement;
+            const themeToggle = document.getElementById("themeToggle");
+            
+            if (theme === "dark") {
+                html.classList.add("dark-theme");
+                html.classList.remove("light-theme");
+                if (themeToggle) {
+                    themeToggle.querySelector('.theme-icon').textContent = '🌙';
+                    themeToggle.querySelector('.theme-text').textContent = '深色';
+                    themeToggle.setAttribute('aria-label', '切换到浅色主题');
+                }
+            } else {
+                html.classList.add("light-theme");
+                html.classList.remove("dark-theme");
+                if (themeToggle) {
+                    themeToggle.querySelector('.theme-icon').textContent = '☀️';
+                    themeToggle.querySelector('.theme-text').textContent = '浅色';
+                    themeToggle.setAttribute('aria-label', '切换到深色主题');
+                }
+            }
+        }
+
+        function toggleTheme() {
+            const currentTheme = getTheme();
+            const newTheme = currentTheme === "dark" ? "light" : "dark";
+            setTheme(newTheme);
+        }
+
+        function loadTheme() {
+            const savedTheme = getTheme();
+            setTheme(savedTheme);
+        }
+
+        window.onload = function() {
+            loadTheme();
+            showApp();
+        };
     </script>
 </body>
 </html>
-
-
-
-

@@ -1,0 +1,910 @@
+1.
+简述Webpack与vite的区别，不少于三条。
+ 核心构建原理与启动方式不同：Webpack：采用打包优先的模式。Vite：采用按需编译 + 原生 ES 模块的模式
+开发环境性能表现差异：Webpack启动速度慢：项目越大，需要打包的模块越多，启动耗时越长
+Vite：启动速度极快：无需打包大型项目也能秒级启动
+依赖处理方式不同：Webpack：所有依赖都会被整合到打包流程中依赖体积越大，打包耗时越长。
+开发环境下，Vite 会先将第三方依赖预构建为 ESM 格式，并存入缓存
+2.
+如何理解 script 标签的 defer 属性和 async 属性 ？
+defer：脚本异步加载，等待 DOM 解析完成后执行，按脚本加载顺序执行；
+async：脚本异步加载，加载完成立即执行，执行顺序不固定。
+3.
+简述浏览器的强缓存和协商缓存。
+强缓存直接用本地数据不找服务器，协商缓存先问服务器缓存能不能用，再决定要不要重新加载。
+4.
+说一下keep-alive的原理，以及如果超出缓存长度，如何处理？
+keep_alive靠缓存组件实例保留状态，超出的max按LRU删掉没用的组件缓存
+5.
+解释并举例说明如何在Vue中实现深度监听。
+Vue深度监听加deep:true，能抓到对象里嵌套属性的变化，默认只看引用变没变
+6.说一下keep-alive的原理，以及如果超出缓存长度，如何处理？
+7.
+解释并举例说明如何在Vue中实现深度监听。
+Vue深度监听加deep:ture,能监听到对象内部属性的变化，默认只监引用。
+8.
+Vue watchEffect的执行时机，是在dom 挂载前还是之后执行，如何修改配制。
+9.
+如何通过配置webpack ,解决首页白屏问题？
+通过代码分割（SplitChunks）+ 路由懒加载 + 预加载关键资源（preload）+ 服务端渲染（SSR）或骨架屏，减少首屏 JS 体积和加载时间
+10.
+简述Webpack与vite的区别，不少于三条
+Webpack 打包整个项目再启动开发服务器，Vite 利用原生 ES 模块按需加载，启动更快；
+Webpack 生产构建成熟稳定，Vite 更适合现代浏览器开发，生产仍依赖 Rollup。
+
+
+
+
+111111111111111111111111111111111111111111111111111
+
+1.简述Webpack与vite的区别，不少于三条。
+ 核心构建原理与启动方式不同：Webpack：采用打包优先的模式。Vite：采用按需编译 + 原生 ES 模块的模式
+开发环境性能表现差异：Webpack启动速度慢：项目越大，需要打包的模块越多，启动耗时越长
+Vite：启动速度极快：无需打包大型项目也能秒级启动
+ 依赖处理方式不同：Webpack：所有依赖都会被整合到打包流程中依赖体积越大，打包耗时越长。
+开发环境下，Vite 会先将第三方依赖预构建为 ESM 格式，并存入缓存；
+2.Vue3中的ref和react中的useRef使用及获取值，设置值的区别。
+Vue3 ref 是响应式（值变触发视图更新）React useRef 非响应式（修改不触发重渲染）
+Vue3 ref 用 .value 设置/获取值 React useRef 用 .current
+Vue3 ref 管理基础类型响应式数据；React useRef 存 DOM 引用 / 持久化非响应式值
+3.React常见hooks及使用场景，不能少于5个。
+useState：管理组件状态，如表单输入、开关状态
+useEffect：处理副作用，如接口请求、DOM 操作
+useRef：保存 DOM 引用、持久化变量
+useContext：跨组件共享数据，避免 props 层层传递
+useReducer：复杂状态逻辑 如购物车、表单校验
+4.Uniapp，react-native,flutter的区别。
+Uniapp 基于 Vue 编译为各端代码 React-Native 基于 React，通过 JS 桥接原生组件；Flutter 自绘引擎（Dart 语言），不依赖原生 /webview。 
+性能：Uniapp 中等；React-Native 中高；Flutter 接近原生（最高） 
+Uniapp 覆盖小程序 / APP/H5 多端；React-Native/Flutter 主打 APP 端
+5.移动端布局方案。
+Flex 布局：核心方案，适配不同屏幕尺寸，控制元素弹性排列。
+Rem/Em：基于字体大小适配，动态调整元素尺寸。
+VW/VH：视口百分比，直接按屏幕占比布局。
+流式布局：宽度用百分比，高度固定，适配不同宽度屏幕。
+响应式布局：媒体查询，区分屏幕尺寸加载不同样式。
+6.Vue3中，使用setup语法糖形式，如何获取props,emit等？
+const props = defineProps({ 字段: 类型 })，取值props.字段。
+const emit = defineEmits(['事件名'])，触发emit('事件名', 参数)
+slots/attrs 用useSlots()/useAttrs()获取（需导入）
+7.React列表循环的Key有什么作用。
+作为列表项的唯一标识，帮助 React 区分不同元素。
+更新时仅重新渲染 key 变化的项，减少 DOM 操作，提升性能。
+确保组件复用 / 更新时，状态与对应列表项正确绑定。
+8.列举你知道的react的数据共享方案，并说出他们的优劣
+Context + useReducer  轻量无依赖，适配中小型应用	频繁更新易触发全局重渲染
+Redux  生态完善，适合复杂状态管理	配置繁琐，学习 / 使用成本高
+MobX  响应式简洁，开发效率高	自由度高，易导致代码不规范
+9. 你认为如何封装一个组件，需要注意什么问题，不能少于 2 条。
+Props 设计：明确类型、默认值和校验规则，避免接收无关数据，保持组件独立性；
+副作用管理：组件内的定时器、事件监听需在卸载时清理，防止内存泄漏；
+样式隔离：使用 scoped CSS/CSS Modules 避免样式污染，确保组件复用性。
+10. 你认为如何实现项目从 0-1 搭建，需要考虑哪些问题。
+技术选型：结合业务场景、团队技术栈确定框架（Vue/React）、UI 库、构建工具（Vite/Webpack）等核心技术；
+工程化配置：搭建 ESLint/Prettier 代码规范、Git 提交规范、CI/CD 流程，保障代码质量和协作效率；
+架构设计：规划路由结构、状态管理方案、请求封装、错误处理等核心模块；
+性能与兼容：明确目标浏览器 / 设备，制定响应式、首屏加载、兼容性方案。
+11.Vue 中 nexttick 是干什么的，如何使用，原理是什么。
+作用：等待 DOM 更新完成后执行回调，确保能获取最新的 DOM 节点；
+使用：
+import { nextTick } from 'vue'
+nextTick(() => { /* DOM 更新后执行逻辑 */ })
+原理：Vue 异步更新 DOM，nextTick 利用微任务等待 DOM 更新队列执行完毕后触发回调。
+12.Keep-alive 如何使用，有哪些属性。
+使用：包裹动态组件，缓存不活动的组件实例，避免重复创建销毁
+属性：
+include：匹配的组件名（字符串 / 正则 / 数组），仅缓存匹配组件；
+exclude：不匹配的组件名，排除缓存；
+max：最大缓存实例数，超出时删除最早缓存的组件。
+13. 页面如何做 seo 优化。
+语义化标签：使用 header/main/article 等标签，提升爬虫对页面结构的理解；
+Meta 优化：合理设置 title、description、keywords，包含核心关键词；
+静态化 / SSR：对需要 SEO 的页面使用 Nuxt.js 生成静态 HTML，提升抓取效率；
+链接优化：使用清晰的 URL 路径，增加内部链接，提升页面权重。
+14. 动画展示如何做优化。
+优先用 CSS 动画：基于 transform/opacity 的 CSS 动画由 GPU 加速，避免重排重绘；
+减少动画复杂度：避免对复杂 DOM 树 / 大尺寸元素做动画，使用 will-change 提前告知浏览器优化；
+节流防抖：对滚动 / 拖拽触发的动画添加节流，减少触发频率，避免卡顿。
+15.Fetch 请求工具使用详情。
+核心：原生 API 无需安装，返回 Promise；需手动判断 res.ok 处理 HTTP 错误（4xx/5xx 不触发 catch）；支持配置 method/headers/body/credentials 等参数。
+16.Axios 封装需要考虑哪些问题。
+请求 / 响应拦截：统一添加 token、处理响应错误（如 401 跳转登录）、格式化返回数据；
+请求取消：支持取消重复请求、页面卸载时取消未完成请求；
+超时与重试：设置全局超时时间，对网络波动导致的失败请求实现自动重试；
+错误统一处理：区分网络错误、业务错误，封装统一的错误提示逻辑。
+18. 你认为 Vue2，vue3 的缺点是什么。
+Vue2：
+Options API 代码分散，大型项目维护难度高；
+对 TypeScript 支持有限，类型推断不完善；
+Vue3：
+Composition API 学习成本高，新手易写出混乱代码；
+生态成熟度略逊于 Vue2，部分老项目迁移成本高。
+19.React 中的优化有哪些。
+React.memo：缓存组件，仅 props 变化时重渲染；
+useMemo/useCallback：缓存计算结果和函数引用，避免子组件不必要重渲染；
+虚拟列表：使用 react-window 渲染可视区域元素，优化长列表性能；
+代码分割：React.lazy + Suspense 实现组件懒加载，减小首屏体积。
+20.Vue 项目，尤其是 vue3，如何做优化。
+按需引入：UI 库（Element Plus）、工具库按需引入，减少打包体积；
+Pinia 优化：拆分状态模块，使用 storeToRefs 保持响应式并减少重渲染；
+编译优化：开启 Vue3 tree-shaking，配合 Vite 按需编译提升构建速度；
+路由懒加载：拆分路由组件为单独 chunk，仅加载当前页面所需代码。
+
+
+
+
+2222222222222222222222222222222222222222222222222222222222222222222
+1. 如何理解 script 标签的 defer 属性和 async 属性 ？
+defer：脚本异步加载，等待 DOM 解析完成后执行，按脚本加载顺序执行；
+async：脚本异步加载，加载完成立即执行，执行顺序不固定。
+2. 行内元素有哪些？块级元素有哪些？空元素（单闭合标签）有哪些？
+行内：span、a、i、em、button、input；
+块级：div、p、h1-h6、ul/li、section、footer；
+空元素：img、br、hr、input、meta、link。
+3. 浏览器的回收机制？
+基于可达性分析，标记不再使用的变量 / 对象，通过垃圾回收器（如 V8 的新生代 Scavenge、老生代 Mark-Sweep）回收内存；常见策略：标记清除、引用计数。
+4. 哪些方法会触发 React 重新渲染？重新渲染 render 会做些什么？
+触发重渲染：state 更新、props 变化、父组件重渲染、useState/useReducer 更新、forceUpdate；
+render：生成新的虚拟 DOM，与旧虚拟 DOM 对比（diff），计算最小更新量并更新真实 DOM。
+5. 如何理解重绘，回流机制？
+回流：DOM 布局 / 几何属性变化（如宽高、位置），触发页面重新计算布局，性能消耗大；
+重绘：元素样式（如颜色、背景）变化，不影响布局，仅重新绘制视觉效果，性能消耗小。
+6.Vue 组件的通讯方式有哪些？
+父子：props/$emit（Vue2）、defineProps/emit（Vue3）；
+跨级：provide/inject；
+任意组件：Vuex/Pinia、事件总线：attrs/listeners。
+7. 路由的 hash 和 history 模式的区别？
+hash：基于 URL 哈希（#），兼容性好，无后端配置，SEO 差；
+history：基于 H5 History API，URL 无 #，需后端配置（刷新 404），SEO 友好。
+8.Img 的 srcset 属性的作用？
+根据设备像素比 / 屏幕宽度，自动选择适配的图片资源，实现响应式图片加载。
+9.Padding 和 margin 的区别？
+padding：内边距，元素内容与边框之间的距离，计入元素宽高；
+margin：外边距，元素边框与外部元素的距离，不计入元素宽高。
+10. 解释盒模型，并描述标准盒模型和 IE 盒模型的区别？
+盒模型：元素由 content、padding、border、margin 组成；
+标准盒：width/height = content 宽高；
+IE 盒：width/height = content + padding + border 宽高。
+11. 如何水平垂直居中一个元素（3 种方法）？
+flex：父元素 display:flex; justify-content:center; align-items:center；
+定位 + transform：子元素 position:absolute; top:50%; left:50%; transform:translate(-50%,-50%)；
+grid：父元素 display:grid; place-items:center。
+12. 解释闭包的概念，并说明它有什么应用场景？
+概念：函数嵌套，内层函数访问外层函数变量，形成闭包，延长变量生命周期；
+场景：防抖节流、模块化封装、柯里化、缓存数据。
+13. 解释原型与原型链的概念？
+原型：每个函数 / 对象有prototype（原型），实例可访问原型上的属性 / 方法；
+原型链：实例查找属性时，逐级向上查找原型（__proto__），直到 Object.prototype，形成原型链。
+14. 解释 JavaScript 中作用域与作用域链的概念？
+作用域：变量 / 函数可访问的范围（全局、函数、块级），隔离变量；
+作用域链：变量查找时，逐级向上查找父级作用域，直到全局作用域，形成作用域链。
+15. 解释 React 中的 Virtual DOM 是如何工作的，以及与真实 DOM 的区别？
+工作：用 JS 对象描述真实 DOM 结构，状态更新时生成新虚拟 DOM，与旧的 diff 对比，仅更新差异部分到真实 DOM；
+区别：虚拟 DOM 是 JS 对象，操作轻量；真实 DOM 操作重，频繁操作易卡顿。
+16.Canvas 和 SVG 的区别？
+Canvas：基于像素，位图，适合动态绘制（如动画、游戏），放大失真；
+SVG：基于矢量，XML 描述，适合静态图形（如图标、图表），放大不失真。
+17. 解释 JavaScript 中的事件循环（Event Loop）机制，并描述异步任务的执行过程？
+机制：JS 单线程，同步任务执行完后，循环处理异步任务（宏任务 / 微任务）；
+执行过程：同步任务→微任务（Promise.then、async/await）→宏任务（setTimeout、DOM 事件），重复循环。
+18.promise 与 async/await 是如何捕获异常？
+Promise：catch() 捕获，或then第二个回调；
+async/await：try/catch 包裹异步代码捕获。
+19. 解释 React 中的虚拟 DOM 是如何提高性能的？
+减少真实 DOM 操作：通过虚拟 DOM diff 对比，仅将变化的部分更新到真实 DOM，避免全量渲染，降低重排重绘开销。
+20. 循环中绑定的 key 为什么不推荐使用 index？
+index 随列表增删变化，导致 React 误判元素身份，触发不必要的重渲染，甚至丢失组件状态 / 动画。
+21.Webpack 中 plugin 与 loader 区别，并说明它们的使用场景？
+loader：处理模块文件（如转译 CSS、ES6），专注文件转换；场景：css-loader、babel-loader；
+plugin：扩展 Webpack 功能（如打包优化、环境注入），专注流程控制；场景：HtmlWebpackPlugin、CleanWebpackPlugin。
+22.Webpack 性能优化有哪些（最少 3 条）？
+按需加载：splitChunks 拆分代码、动态 import；
+缓存：cache-loader、hard-source-webpack-plugin；
+压缩：TerserPlugin 压缩 JS、CssMinimizerPlugin 压缩 CSS；
+减少解析：resolve.modules/extensions 缩短查找路径。
+23. 常用的 Loader 有哪些（最少 5 条）？
+babel-loader、css-loader、style-loader、sass-loader、file-loader、url-loader、vue-loader。
+24. 如何使用 Webpack 处理样式文件（CSS/Sass/Less）？
+CSS：css-loader（解析 CSS） + style-loader（注入 DOM）；
+Sass/Less：sass-loader（依赖 node-sass）/less-loader + css-loader + style-loader；
+生产环境：mini-css-extract-plugin 提取为单独 CSS 文件。
+
+
+
+
+3333333333333333333333333333333333333333333333333333333333
+
+1.简述浏览器的强缓存和协商缓存。
+强缓存直接用本地数据不找服务器，协商缓存先问服务器缓存能不能用，再决定要不要重新加载。
+2.简述Promise A+ 的各种规范。
+Promise A+规定了Promise的状态规则，then方法的链式调用和异步执行逻辑，是所有Promise实现的统一标准。
+3.简述 vue2和vue3的区别？
+Vue3用proxy做响应式，加了组合式API,性能和TS支持更好，还解决了Vue2的一些语法限制。
+4.解释 React 的 firber 架构。
+fiber架构的核心就是把渲染任务拆成小任务，能暂停/继续/优先处理/，避免渲染卡主线程。
+5.解释 React 的 diff算法？
+React的diff算法就只比同层节点，列表靠key识别，不同组件直接重建，高效找DOM变化。
+6.描述懒加载的应用场景和实现步骤？
+懒加载用在长列表/多媒体/路由，监视线程内元素，进视野再加载资源。
+7.简述前端性能优化的各种手段？
+前端性能优化从加载，渲染，代码，网络等多方面提速。
+8.解释js中的闭包概念和优点及缺点。
+闭包就是内部函数能拿到外部函数的变量且变量不会被销毁，能私有化数据但易内存泄露
+9.描述事件循环的作用以及执行流程？
+事件循环管JS单线程的执行顺序，先同步，在微任务，渲染，在宏任务，循环往复。
+10.描述原型和原型链。
+原型存共享方法，原型链是对象找属性的链条，自身每月就往上寻找原型。
+11.请说明什么是宏任务、什么是微任务。
+宏任务是慢异步，微任务是快异步，事件循环先清微任务在执行宏任务
+12.简述 TCP 和 UDP 协议的区别？
+TCP:靠谱但慢(要连接，保顺序)，UDP但不靠谱(无连接，丢包不管)
+13.描述浏览器中输入URL到看到页面的过程？
+输URL后先解析域名找IP，连服务器发送请求，拿到数据之后浏览器解析渲染出页面
+14.请解释 websocket 的心跳机制？
+WebSocket心跳是定期发小数据包检测连接，断了就重连，保证长连接可用。
+15.列举至少三个常用的Hooks及其作用。
+yseState存状态，useEffect处理副作用，useContext:跨组件传数据
+16.请描述 redux 的概念及使用流程？
+Redux是管全局状态的库，状态存在store当中，只能通过action+reducer改状态，保证状态变化可追溯。
+17.在评测一个页面加载速度时，可以从哪些指标进行观察，每个指标的简写及代表意义是什么？
+测加载速度看FCP,LCP,FID等，各指标看不同维度的加载体验
+18.TS中有哪些装饰器。
+TS装饰器有类/方法/属性/参数/访问器五种，用来给类和类成员加额外的功能。
+19.TS中有哪些常用类型。
+TS常用类型有基础类型，数组/对象等引用类型，还有any/unknown,联合/交叉类型，接口/枚举等。
+20.请描述泛型的概念及作用。
+泛型是类型的"占位符"，能复用代码还不丢类型校验，适配不同类型场景。
+
+
+
+
+
+
+44444444444444444444444444444444444444444444444444444444444444
+
+1.说一下keep-alive的原理，以及如果超出缓存长度，如何处理？
+keep_alive靠缓存组件实例保留状态，超出的max按LRU删掉没用的组件缓存
+2.link 与@import 的区别？
+link是HTML的标签并行加载，功能多，@import是CSS语法晚加载，只能引样式，兼容也差
+3.什么是重绘（repaint）和回流（reflow）？
+回流是改布局导致重新计算布局，重绘是改变外观只重新画，回流比重绘更耗性能。
+4.什么是 Vue 3 的 Teleport 组件？它的作用是什么？
+Teleport能把组件DOM波挪到指定位置，逻辑还在原组件，解决弹窗被父元素样式限制的问题。
+5.响应式布局如何实现，详细说说实现思路。
+响应式布局靠媒体查询分配适屏，flex/Grid弹性布局，rem。vw相对单位，让页面适配不同屏幕。
+6.说说你对递归的理解？手写实现深拷贝函数。
+递归就是自己调用自己，深拷贝用递归复制所有层级，还要处理循环引用和特殊类型
+7.短轮询、长轮询和 WebSocket 间的区别？
+短轮询定时问服务器，长轮询等服务器有数据在回复，WebSocket是双向长连接，实时性最好。
+8.Typescript中 interface 和 type 的差别是什么？
+interface只能定义对象/类可合并，type能定义任意类型，不可合并，扩展方式也不同。
+9.Vue 页面第一次加载触发哪几个钩子？能不能在更新的钩子函数中进行数据请求，需要注意什么问题？
+Vue2首次加载走beforeCreate到mounted，Vue3走onBedforeMount更新钩子可请求数据，但要加条件无限请求，取消无效请求
+10.在React中为啥useEffect不能是异步的？
+useEffect回调要返回清理函数或是undefined，async返回Promise会导致清理逻辑失效，所以不能直接async。
+11.什么是交叉类型和联合类型，它们如何用于组合类型？
+联合类型是选其中一个，交叉类型是全拥有，分别用 | 和 & 组合类型。
+12.深入理解Vue3为什么需要ref、toRef、toRefs？
+ref管基本类型响应式，toRef/toRefs解决响应式对象解构丢响应式，且和原对象关联的问题。
+13.async/await对比Promise的优势？
+asnyc/await写起来像同步代码，调试和异常处理更方便，流程控制也更灵活。
+14.Vue的自定义指令钩子函数有哪些？你用自定义指令做过什么？
+Vue自定义指令有挂载/更新/卸载等钩子，常用于做防抖，懒加载，自动聚焦，权限控制。
+15.SSR 是什么，谈谈你对他的理解。
+SSR在服务器渲染完整的HTML给浏览器，首屏快，SEO好，但服务器压力大，开发成本高，
+16.Any和unknown的区别，如何重新定义他们的数据类型？
+any完全关闭类型检查，unknown更安全需先判断类型，unknown可通过类型断言/守卫重新定义类型。
+17.Vue 3 中的 watch 和 watchEffect 有什么区别？
+watch显示监听指定数据，能拿新旧值，懒执行；watchEffect自动手机依赖，立即执行，拿不到新旧值。
+18.Flex:1缩写的具体代表那些？
+flex:1是flex是flex-grow:1,flex-shink:1,flex-basix:0%的缩写。意思是占满剩余空间，允许收缩，基准尺寸为0.
+19.在组件上可以绑定多个 v-model 吗，如果可以应该如何绑定呢，在子组件上如何接收？
+组件能绑多个v-model，父组件加参数名，子组件接受Props，触发update事件传新值
+20.说说你对节流函数和防抖函数的理解？（代码实现）
+防抖是最多触发只执行最后一次，节流是多次触发固定间隔执行一次，都用来限制函数的执行频率。
+
+
+
+555555555555555555555555555555555555555555555555555555555555555
+
+1.解释并举例说明如何在Vue中实现深度监听。
+Vue深度监听加deep:true，能抓到对象里嵌套属性的变化，默认只看引用变没变
+2.说说react中的Server-Side Rendering应该如何去做，原理是什么？
+React SSR是服务端出HTML,客户端激活交互，核心解决首屏加载问题和SEO的问题
+3.在Vue 3中，如何使用Teleport组件来解决模态框的z-index问题？
+Teleport把模态框挪到body等顶层位置，脱离原有层级，z-index就不受父组件影响了。
+4.如何利用Vuex模块化状态管理来组织大型应用的状态逻辑，Pinia又该如何进行操作？
+Vuex拆模块要开命名空间，Pinia直接定义独立Store,不用复杂的模块注册
+5.说说Git中HEAD、工作树和索引之间的区别？
+HEAD是当前版本指针，工作区是写代码的地方，暂存区是提交前的临时区
+6.什么是事件循环（Event Loop）？它如何影响异步代码执行，浏览器的事件循环和node.js中有什么区别？
+事件循环是异步代码的执行规矩，浏览器和dode核心逻辑
+7.使用Web Workers时需要注意哪些性能考虑因素？
+Web Workers要注意和主线程通信别传大对象（会复制耗性能），别建太多Worker(占线程),大计算拆成小任务；还要注意Worker不能访问DOM，别存太多数据
+8.WebAssembly是什么？何时应该考虑使用WebAssembly而不是纯JavaScript？
+Wasm是高性能的二进制代码，计算密集型场景或服用底层库时用，比JS快。
+9.TypeScript与Vue 3结合使用时有哪些优势？如何设置项目以支持TypeScript？
+TS+Vue3能做类型校验，写代码有智能提示，减少bug还易维护；新建项目选择TS模板，老项目装TS依赖，配tsconfig.json，组件里用<script setup lang="ts">就行。
+10.ES6模块导入导出与CommonJS有何不同？它们各自适用于什么场景？
+Es6模块静态加载适配浏览器，/新Node,CommonJS动态加载适配老Node项目。
+11.Vue的虚拟dom和react的虚拟dom在执行渲染时有什么区别，为什么要这样做？
+Vue虚拟DOM精准更，React默认全量更需手动优化，源于两者响应和更新机制不同。
+12.浏览器存储APIs（localStorage, sessionStorage, IndexedDB等）各自的优缺点是什么，如何保证其安全性？
+localStorage/sessionstorage简单但容量小，IndexedDB容量大但复杂，安全核心是加密+限制敏感数据。
+13.如何通过Webpack优化Vue项目的打包速度和大小？
+打包速度靠缓存和多线程，体积靠代码风分割，按需引入和压缩
+14.在项目上线之后应该如何解决跨域问题，具体实现流程是怎样的？
+上线后跨域优化后端配置CORS,没权限用Nginx反向代理。
+15.Vue中的nextTick函数是什么，什么时候需要用到它？
+nextTick等DOM更完在执行代码，改数据后操作DOM就要用它
+16.如何基于用户行为或偏好动态加载不同的Vue组件？
+用definAsyncComponent动态导入，结合条件渲染，按用户行为/偏好加载组件。
+17.如何保证cookie的安全性？
+Cookie靠安全加HttpOnly/Secure?SameSite,加载存敏感数据，设短期过期时间。
+18.如何利用Service Worker技术来提高Web应用的离线体验？
+Service Woker缓存核心资源，离线时拦截请求返回缓存，实现离线访问。
+19.使用Promise.allSettled()相较于Promise.all()有何优势？
+all一个失败就崩，allSettled能拿到所有任务结果，适合要知道每个任务成败的场景。
+20.如何在Vue中实现一个支持多语言切换的国际化(i18n)解决方案？
+使用vue-il8n配语音包，$t()取值，改locale就能切换多语言。
+
+
+666666666666666666666666666666666666666666666666666
+1.说一下keep-alive的原理，以及如果超出缓存长度，如何处理？
+keep-alive是 Vue 的内置组件，用于缓存不活动的组件实例，而非销毁它们。其核心原理是通过维护一个缓存对象（cache） 存储组件实例，同时用keys 数组记录缓存组件的标识；当组件被包裹在keep-alive中时，切换组件不会触发beforeDestroy和destroyed生命周期，而是将组件实例缓存到cache中，再次渲染时直接从缓存中取出复用，避免重复创建和销毁组件的性能开销。同时，keep-alive会结合include（匹配缓存）、exclude（排除缓存）属性做条件缓存，仅处理符合规则的组件。
+超出缓存长度的处理
+keep-alive提供max属性设置最大缓存组件数量；当缓存的组件实例数超过max时，会按照LRU（最近最少使用） 策略清理缓存：删除keys数组中最靠前（最近最少使用）的组件标识，并从cache中移除对应的组件实例，再将新组件加入缓存，保证缓存数量不超过设定值。
+
+
+2.link 与@import 的区别？
+·  加载时机：link是 HTML 标签，页面解析时同时加载外部样式表；@import是 CSS 语法，需等CSS 文件加载解析完成后，才会加载其引入的样式表，存在加载延迟。
+·  兼容性：link是 HTML 原生标签，兼容所有浏览器；@import是 CSS2.1 新增特性，低版本 IE（如 IE5 以下）不支持。
+·  DOM 操作：link标签可通过JavaScript 操作 DOM动态创建、删除，实现样式的动态切换；@import是 CSS 语法，无法通过 JS 动态操作。
+·  功能拓展：link除了加载 CSS，还可用于加载图标（favicon）、设置预加载等；@import仅用于加载 CSS。
+·  嵌套使用：@import可在 CSS 文件中嵌套引入其他 CSS；link仅能在 HTML 中引入，无法嵌套。
+
+
+3.什么是重绘（repaint）和回流（reflow）？
+回流（重排，Reflow）
+当 DOM 元素的几何属性发生变化（如宽高、位置、布局、尺寸、层级），或页面首次渲染、窗口大小改变、元素增删时，浏览器需要重新计算元素的布局位置和大小，这个过程称为回流。回流会触发后续的重绘，性能消耗大，因为会影响相邻甚至整个页面的元素布局。常见触发场景：修改width/height、margin/padding、top/left，删除 / 添加 DOM 节点，改变窗口大小，设置display: none等。
+重绘（Repaint）
+当 DOM 元素的外观样式发生变化，但几何属性未变（如颜色、背景、字体、透明度），浏览器只需重新绘制元素的视觉效果，无需重新计算布局，这个过程称为重绘。重绘性能消耗远小于回流，仅针对元素自身的视觉渲染。常见触发场景：修改color、background-color、font-size、opacity，设置visibility: hidden等。
+核心关系
+回流一定会触发重绘，重绘不一定触发回流；开发中需尽量减少回流，如批量修改样式、使用absolute/fixed脱离文档流、避免频繁操作 DOM 等。
+
+
+4.什么是 Vue 3 的 Teleport 组件？它的作用是什么？
+Teleport（瞬移组件）是 Vue 3 的内置组件，也被称为传送门，核心功能是将组件的渲染内容从当前 DOM 结构中 “传送” 到页面的指定 DOM 节点下，组件的逻辑仍属于当前组件（父子通信、生命周期、响应式数据均不受影响），仅改变渲染的 DOM 位置。
+核心作用
+1.解决样式嵌套隔离问题：当组件被包裹在多层父组件中（如带有overflow: hidden、z-index的父容器），弹窗、模态框、提示框等组件会受父组件样式限制（如无法居中、层级被遮挡），通过Teleport可将其传送到body或其他顶级 DOM 节点，摆脱父组件的样式束缚。
+2.优化 DOM 结构：让组件的渲染 DOM 与逻辑解耦，使整体 DOM 结构更清晰，避免深层嵌套的 DOM 节点。
+
+
+5.响应式布局如何实现，详细说说实现思路。
+响应式布局是指页面根据设备的屏幕尺寸、分辨率、视口大小自动调整布局和样式，实现多终端（PC、平板、手机）的适配，核心原则是“一个页面适配所有设备”
+
+
+6.说说你对递归的理解？手写实现深拷贝函数。
+递归的理解
+递归是一种编程思想，指一个函数在其内部调用自身，将一个复杂的大问题拆解为与原问题逻辑相同、规模更小的子问题，直到子问题达到递归终止条件，再逐层返回结果，最终解决原问题。
+核心要素
+递推关系：大问题拆分为小问题的逻辑，即函数自身调用的条件；
+终止条件：停止递归的边界条件，若缺失会导致栈溢出（Maximum call stack size exceeded）；
+逐层返回：子问题解决后，将结果向上传递，组合为原问题的解。
+适用场景
+深拷贝、树形结构遍历（如 DOM 树、二叉树）、阶乘 / 斐波那契数列计算、归并排序 / 快速排序等。
+优缺点
+优点：代码简洁、逻辑清晰，无需手动维护循环栈；
+缺点：递归调用会占用调用栈，深度过大易导致栈溢出；部分场景下性能不如循环（存在函数调用开销）。
+手写深拷贝函数
+深拷贝的核心是创建一个新的对象 / 数组，将原对象的所有属性（包括嵌套属性）都复制到新对象中，新对象与原对象完全独立，修改一方不会影响另一方（区别于浅拷贝：仅复制顶层属性，嵌套属性为引用传递）。
+考虑场景
+处理对象和数组（最常见的引用类型）；
+处理嵌套的对象 / 数组（核心用递归）；
+排除原始类型（number/string/boolean/null/undefined/symbol/bigint，直接复制）；
+简单处理循环引用（如 obj.a = obj，通过 WeakMap 缓存已拷贝的对象）。
+
+
+7.短轮询、长轮询和 WebSocket 间的区别？
+三者均为前端与后端实现实时通信的方案，核心差异在于通信方式、请求状态、性能、实时性，其中短轮询和长轮询基于HTTP 协议（单向通信，客户端主动请求），WebSocket 基于WebSocket 协议（双向通信，全双工）。
+轮询（Short Polling）
+原理
+客户端每隔固定时间（如 1s/3s）通过 AJAX 主动向服务端发送请求，服务端立即处理并返回响应（无论是否有新数据），客户端收到响应后，再次定时发起请求，循环往复。
+长轮询（Long Polling）
+原理
+客户端向服务端发送请求后，服务端不会立即返回响应：若有新数据，直接返回；若无新数据，会挂起请求（保持连接），直到有新数据或连接超时，客户端收到响应后，立即重新发起请求，保持长连接的 “伪实时”。
+WebSocket
+原理
+客户端与服务端通过一次 HTTP 握手建立TCP 长连接，此后基于 WebSocket 协议进行全双工双向通信：服务端可主动向客户端推送数据，客户端也可主动向服务端发送请求，无需重复创建连接，且数据传输为轻量级的帧结构，无 HTTP 头部开销。
+
+
+8.Typescript中 interface 和 type 的差别是什么？
+nterface（接口）和type（类型别名）都是 TypeScript 中定义自定义类型的核心方式，均可描述对象、函数的类型，核心差异在于语法特性、扩展方式、适用场景，interface更侧重对象结构的抽象，type更通用，可描述任意类型。
+1. 定义范围不同（核心差异）
+interface：仅能描述对象 / 类的结构，无法描述原始类型、联合类型、交叉类型等；
+type：通用型，可描述任意类型，包括对象、原始类型（number/string）、联合类型、交叉类型、元组、字面量类型等。
+
+
+9.Vue 页面第一次加载触发哪几个钩子？能不能在更新的钩子函数中进行数据请求，需要注意什么问题？
+Vue2 页面第一次加载触发的钩子（按执行顺序）
+全局钩子：beforeCreate → created → beforeMount → mounted（若有路由守卫，会先触发路由的beforeEnter/beforeRouteEnter等）
+Vue3 组合式 API（setup）+ 选项式 API 加载触发的钩子
+组合式 API：setup（最早执行，替代beforeCreate和created）→ beforeMount → mounted；
+选项式 API：与 Vue2 一致，beforeCreate → created → beforeMount → mounted。
+核心钩子说明
+beforeCreate/created：实例已创建，可访问响应式数据，但 **$el 未生成 **（无 DOM），适合做初始化数据请求、接口调用；
+beforeMount：编译模板完成，即将挂载 DOM，$el 仍未生成；
+mounted：DOM 已挂载完成，可访问 / 操作 DOM，适合做 DOM 相关的初始化（如 echarts 渲染）。
+
+
+10.在React中为啥useEffect不能是异步的？
+useEffect的返回值有且仅有一个合法场景：返回一个清理函数（清除副作用），用于在组件卸载或依赖项变化时，清除定时器、取消请求、解绑事件等副作用，而异步函数（async/await）的返回值是 Promise，并非清理函数，这是useEffect不能直接为异步的核心原因。
+
+11.什么是交叉类型和联合类型，它们如何用于组合类型？
+交叉类型（Intersection Type）和联合类型（Union Type）是 TypeScript 中组合多个现有类型的核心方式，均通过操作符实现，核心差异：联合类型是 “或” 关系，交叉类型是 “与” 关系。
+核心特性
+新类型包含所有原类型的属性和方法，是原类型的超集；
+若原类型有同名属性，属性类型会变为交叉类型（若为基础类型，会变为 never，因为基础类型无交集）。
+
+12.深入理解Vue3为什么需要ref、toRef、toRefs？
+Vue3 的响应式核心是 Proxy，仅对对象 / 数组等引用类型实现深度响应式，而原始类型（number/string/boolean/null/undefined） 无法被 Proxy 代理，因此需要ref、toRef、toRefs解决原始类型的响应式、对象属性的响应式解耦、解构后响应式保留等问题，三者各司其职，互补配合。
+核心背景：Vue3 响应式的 “痛点”
+Proxy 仅代理引用类型，原始类型无法被响应式包裹：直接定义let a = 1，修改 a 不会触发组件更新；
+从响应式对象中直接解构属性，会丢失响应式：const { name } = reactive({ name: '张三' })，修改 name 不会触发更新；
+组件传参时，传递对象的单个属性，若直接传递值，会丢失响应式，需要保持属性与原对象的关联。
+
+
+13.async/await对比Promise的优势？
+async/await是 ES2017 推出的异步编程语法糖，基于 Promise 实现，完全兼容 Promise 的所有特性，其核心优势是将异步代码的 “回调式” 写法转换为 “同步式” 写法，解决了 Promise 的回调地狱（嵌套） 问题，让异步代码的可读性、可维护性、错误处理大幅提升。
+
+14.Vue的自定义指令钩子函数有哪些？你用自定义指令做过什么？
+Vue 的自定义指令分为全局自定义指令和局部自定义指令，用于对 DOM 元素进行底层的操作（如聚焦、防抖、权限控制），补充 Vue 内置指令（v-if/v-for/v-bind）的不足。Vue2 和 Vue3 的自定义指令钩子函数名称和执行时机略有差异，Vue3 更贴合组件的生命周期
+
+15.SSR 是什么，谈谈你对他的理解。
+SSR（Server-Side Rendering）即服务端渲染，指前端页面的 HTML 结构在服务器端生成，服务器将完整的、包含页面初始数据的 HTML 字符串返回给浏览器，浏览器直接解析渲染这个 HTML，无需等待前端 JS 加载执行就能看到页面内容；而传统的 SPA（单页应用）是客户端渲染（CSR），浏览器先加载空的 HTML 和 JS，再由 JS 动态请求数据、生成 DOM 并渲染页面。
+
+16.Any和unknown的区别，如何重新定义他们的数据类型？
+any 是 TypeScript 中的 “任意类型”，表示变量可以是任何类型，且对 any 类型的变量进行任何操作（访问属性、调用方法、赋值）都不会有类型检查，完全关闭了 TypeScript 的类型校验。
+unknown 是 TypeScript 3.0 新增的 “未知类型”，表示变量的类型未知，是 TypeScript 中类型安全的 any：unknown 类型的变量也可以赋值为任何类型，但对其操作前必须先进行类型断言 / 类型守卫，否则无法操作。
+
+17.Vue 3 中的 watch 和 watchEffect 有什么区别？
+watch
+watch 是显式监听指定的响应式数据，当监听的数据源发生变化时，执行回调函数；需明确指定要监听的变量，且默认懒执行（首次加载不执行，仅数据源变化时执行）。
+watchEffect
+watchEffect 是隐式监听响应式数据，立即执行传入的回调函数，同时自动追踪回调函数中用到的所有响应式数据，当这些数据变化时，回调函数会重新执行；无需指定监听的变量，且默认立即执行。
+
+
+18.Flex:1缩写的具体代表那些？
+Flex（Flexible Box）即弹性布局，flex 是 flex-grow、flex-shrink、flex-basis 三个属性的缩写，用于设置弹性项目（flex item）的伸缩规则。
+flex: 1 是 flex: 1 1 0% 的缩写
+flex-grow（放大比例）
+取值：非负数（默认 0）；
+含义：当弹性容器（flex container）有剩余空间时，弹性项目的放大比例；
+flex-grow: 1：剩余空间会按比例分配给该项目，多个项目都设为 1 时，剩余空间平均分配。
+flex-shrink（缩小比例）
+取值：非负数（默认 1）；
+含义：当弹性容器空间不足时，弹性项目的缩小比例；
+flex-shrink: 1：空间不足时，该项目会按比例缩小，避免溢出。
+flex-basis（基准尺寸）
+取值：长度值（如 px、%）或 auto（默认 auto）；
+含义：弹性项目在分配剩余空间前的初始尺寸；
+flex-basis: 0%：项目的初始尺寸为 0，剩余空间完全由 flex-grow 分配（区别于 auto：auto 会先占用自身内容的宽度）。
+
+19.在组件上可以绑定多个 v-model 吗，如果可以应该如何绑定呢，在子组件上如何接收？
+可以！Vue 3 支持在单个组件上绑定多个 v-model，解决了 Vue 2 中一个组件只能绑定一个 v-model 的限制；Vue 3 通过 v-model:参数名 的形式实现多 v-model 绑定，子组件通过定义对应的 props 和 emit 事件接收。
+
+20.说说你对节流函数和防抖函数的理解？（代码实现）
+核心思想：触发事件后，延迟 n 秒执行回调；若在这 n 秒内再次触发事件，则重置延迟时间，直到事件触发后超过 n 秒未再触发，才执行回调。
+核心思想：触发事件后，立即执行回调，并在接下来的 n 秒内忽略所有触发；n 秒后再次触发事件，才会再次执行回调。
+
+
+77777777777777777777777777777777777777777777777777
+
+1.解释并举例说明如何在Vue中实现深度监听。
+Vue深度监听加deep:ture,能监听到对象内部属性的变化，默认只监引用。
+2.说说react中的Server-Side Rendering应该如何去做，原理是什么？
+ReactSSR是服务端渲染HTML字符串返回，客户端只需激活交互；核心是"服务端渲染HTML+客户端注水激活",解决首屏白屏，SEO的问题
+3.在Vue 3中，如何使用Teleport组件来解决模态框的z-index问题？
+Teleport把模态框body等顶层容器，脱离原有层级，z-index就能正常生效。
+4.如何利用Vuex模块化状态管理来组织大型应用的状态逻辑，Pinia又该如何进行操作？
+Vuex靠命名空间拆分模块，Pinia直接按业务定义独立store。更简洁无需模块注册。
+5.说说Git中HEAD、工作树和索引之间的区别？
+HEAD是当前提交指针，工作区是编辑区，暂存区是提交前的过渡期。
+6.什么是事件循环（Event Loop）？它如何影响异步代码执行，浏览器的事件循环和node.js中有什么区别？
+事件循环是异步代码的执行规则，浏览器和Node核心逻辑一致，Node多了专属的高级优先级任务
+7.使用Web Workers时需要注意哪些性能考虑因素？
+WebWorkers要注意通信开销和数量，拆分计算任务，避免浪费线程资源
+8.WebAssembly是什么？何时应该考虑使用WebAssembly而不是纯JavaScript？
+Wasm是高性能二进制代码，计算密集型，需复用底层代码库时引用它，比JS快
+9.TypeScript与Vue 3结合使用时有哪些优势？如何设置项目以支持TypeScript？
+Ts+vue3有类型校验和智能提示，新建项目选Ts模板，老项目装依赖配tsconfig即可
+10.ES6模块导入导出与CommonJS有何不同？它们各自适用于什么场景？
+Es6模块静态加载适合浏览器/现代Node,CommonJS动态加载适合传统Node项目
+11.Vue的虚拟dom和react的虚拟dom在执行渲染时有什么区别，为什么要这样做？
+Vue虚拟DOM精确更新，React默认全量更新需手动优化，源于两者响应式和更新机制不同
+12.浏览器存储APIs（localStorage, sessionStorage, IndexedDB等）各自的优缺点是什么，如何保证其安全性？
+localStorage/sessionStorage简单但容量小，indexedDB容量大但复杂，安全核心是加密+限制敏感数据存储。
+13.如何通过Webpack优化Vue项目的打包速度和大小？
+打包速度靠缓存，多线程，缩小范围，体积靠代码分割，Tree Shaking,按需引入
+14.在项目上线之后应该如何解决跨域问题，具体实现流程是怎样的？
+上线后跨域优先后端配置CORS，没权限就在Nginx反向代理，前端不用改代码
+15.Vue中的nextTick函数是什么，什么时候需要用到它？
+nextTick等DOM更新完之后在执行回调，修改数据后操作DOM就要用它
+16.如何基于用户行为或偏好动态加载不同的Vue组件？
+用defneAsyncComponent+import()动态导入，接口条件渲染，按用户行为/偏好加载组件
+17.如何保证cookie的安全性？
+Cookie安全靠httponly,secure,samesite，+加密和短过期时间
+18.如何利用Service Worker技术来提高Web应用的离线体验？
+Service Worker注册后缓存核心资源，离线时拦截请求返回资源，实现离线访问。
+19.使用Promise.allSettled()相较于Promise.all()有何优势？
+all一个失败就报错，allSettled等所有完成并返回全部结构，适合要知道所有状态的场景
+20.如何在Vue中实现一个支持多语言切换的国际化(i18n)解决方案？
+用vue-i18n配语言包，组件中共$t取值，切换locale就能换语言
+
+8888888888888888888888888888888888888888888
+1.Vue watchEffect的执行时机，是在dom 挂载前还是之后执行，如何修改配制。
+·  默认：DOM 挂载 / 更新前执行
+·  DOM 之后执行：配置 flush: 'post'
+·  可选值：pre(默认)、post(DOM 后)、sync(同步立即)
+
+2.说说什么是服务器端渲染，服务器端渲染解决了什么问题？
+1. 定义
+页面HTML 在服务器端生成，直接返回给浏览器渲染，而非浏览器下载 JS 后再生成页面。
+2. 解决的核心问题
+1.首屏加载慢：浏览器直接渲染完整 HTML，无需等待 JS 执行
+2.SEO 不友好：搜索引擎能直接抓取完整页面内容
+3.首屏白屏：页面直接显示内容，无等待空白期
+
+3.Redux 中间件是什么，如何注册readux 中间件，多个中间件的执行流程？
+·  是什么Action 到达 Reducer 前的拦截处理层，用于处理异步、日志、上报等逻辑。
+·  ·  如何注册通过 Redux 提供的方法统一装载，在创建仓库时注册启用。
+·  ·  多个中间件执行流程按注册顺序链式执行，依次处理后传递给下一个，最终到达 Reducer。
+·  
+4.下面的代码输出什么，并解释原因
+function createCounter() {
+  let count = 0;
+  return {
+    increment: () => count++,
+    getValue: () => count
+  };
+}
+
+const counter1 = createCounter();
+const counter2 = createCounter();
+
+console.log(counter1.increment()); // 输出什么？
+0
+console.log(counter1.increment()); // 输出什么？
+1
+console.log(counter2.getValue());   // 输出什么？
+0
+原因
+1.闭包独立：每次调用 createCounter 都会生成独立的 count 变量，互不干扰
+2.counter1 两次自增：第一次返回自增前的 0，第二次返回自增前的 1
+3.counter2 从未自增，所以返回初始值 0
+
+// 进阶：如果将 count 改为全局变量，结果会如何？
+输出：0 1 2
+原因
+count 变成全局共享，counter1 和 counter2 共用同一个值，counter1 自增会影响 counter2
+
+4.说说Git中HEAD、工作树和索引之间的区别？
+1. 三者定义
+HEAD：当前所在的最后一次提交（版本指针），指向本地已确认的历史版本
+工作树：你本地正在编辑、修改的文件，未保存到 Git
+索引（暂存区）：git add 后的文件存放区，待提交的临时区域
+2. 核心区别
+工作树：文件改动的工作现场
+索引：提交前的中转站 / 暂存区
+HEAD：当前分支的最后一个正式版本
+3. 流转关系
+工作树 →(add)→ 索引 →(commit)→ HEAD
+
+5.什么是事件循环（Event Loop）？它如何影响异步代码执行，浏览器的事件循环和node.js中有什么区别？
+JS 是单线程语言，事件循环是它实现异步的机制，负责按顺序调度同步、异步代码的执行。
+2. 如何影响异步代码
+先执行同步代码
+异步任务不阻塞主线程，先放入队列
+同步执行完，再循环取出异步任务执行
+保证代码不卡死、有序执行
+3. 浏览器 vs Node.js 区别
+浏览器：宏任务、微任务队列，每执行一个宏任务就清空微任务
+Node.js：多阶段事件队列，每个阶段执行完一批宏任务再清空微任务
+核心差异：微任务执行时机不同
+
+6.SharedWorker  如何实现跨标签页通讯，给出代码？
+SharedWorker 是一种共享进程的 Web Worker，能被多个同源标签页 /iframe共同连接使用。
+2. 如何实现跨标签页通讯
+1.所有标签页连接同一个共享线程
+2.线程内部维护连接列表
+3.任意标签页发消息 → 共享线程接收 → 转发给所有连接的标签页
+4.标签页接收消息并处理
+3. 核心原理
+共享线程作为中央中转站
+标签页之间不直接通信，都通过共享线程转发
+天然支持多标签页实时同步、消息广播
+
+7.MessageChannel 如何对象深拷贝的代码，并指出局限性？
+利用消息通道的序列化传输特性，发送端把对象发出去，接收端收到的会是全新的深拷贝对象，和原对象完全隔离。
+2. 局限性
+不支持函数、Symbol、undefined，会丢失
+不支持循环引用，会直接报错
+不支持 Map、Set、RegExp、Date 等特殊对象，会丢失类型
+不支持不可枚举属性，拷贝后丢失
+
+8.简述TypeScript中 keyof ,typeof ,extends ,infer 等关键字的使用场景，和作用？
+1. keyof
+作用：获取类型的所有键，生成联合类型场景：约束对象键名、获取属性类型
+2. typeof
+作用：获取变量 / 值的类型场景：把 JS 变量转成 TS 类型、配合 const 使用
+3. extends
+作用：
+接口 / 类继承
+类型条件判断
+泛型约束场景：复用类型、限制泛型范围、实现类型逻辑
+4. infer
+作用：在条件类型中提取 / 推断未知类型场景：获取函数返回值、数组元素、Promise 内型等
+
+9.简述commonjs 和es module 的区别？
+·  加载机制
+·  CommonJS：运行时动态加载，同步加载
+ES Module：编译时静态加载，支持异步 / 静态分析
+·  值引用
+·  CommonJS：导出的是值拷贝，修改不联动
+ES Module：导出的是值引用，实时同步
+·  this 指向
+·  CommonJS：this = 当前模块
+ES Module：this = undefined
+·  使用位置
+·  CommonJS：Node.js 默认
+ES Module：浏览器、Node 新版、前端工程化
+·  导入导出
+·  CommonJS：require() / module.exports
+ES Module：import / export
+
+10. 下面的代码输出什么，解释原因？
+
+   console.log(a); // 输出什么？
+var a = 1;
+
+function b() {
+  console.log(c); // 输出什么？
+        let c = 3;
+}
+b();
+
+console.log(d); // 输出什么？
+const d = 4;
+
+1.undefined
+2.Uncaught ReferenceError: Cannot access 'c' before initialization
+3.代码终止，不会执行到最后一句
+原因
+
+第一句 console.log(a)
+
+1.var 存在变量提升，声明提前但未赋值
+2.输出：undefined
+
+函数内 console.log(c)
+
+1.let/const 存在暂时性死区
+2.声明前访问直接报错
+3.程序终止，后面代码不执行
+
+最后 console.log(d)
+
+因为前面已经报错，永远不会执行
+
+11.Localstorage 如何实现跨标签页通讯？
+利用 storage 事件：
+同源下，一个标签页修改 localStorage
+其他所有同源标签页会触发 storage 事件
+从而实现消息传递
+2. 实现步骤
+1.发送方：用 localStorage.setItem 存数据 / 触发事件
+2.接收方：监听 window.addEventListener('storage')
+3.接收方从事件对象里拿到数据
+3. 特点
+只在不同标签页触发，当前页不触发
+必须同源（同域名、同协议、同端口）
+简单轻量，无需额外服务
+
+12.什么是cookie ,js 如何生成cookie，解释cookie 各个属性的含义？
+Cookie 是存储在浏览器的小型文本数据，跟随请求自动发给服务器，用于状态保持（登录、标识、跟踪）。
+2. JS 如何生成
+直接给 document.cookie 赋值，即可创建 / 修改。
+3. 核心属性含义
+name=value：cookie 名称和值（必须）
+expires/max-age：过期时间，超时自动删除
+domain：生效域名
+path：生效路径
+secure：仅 HTTPS 下传输
+httpOnly：禁止 JS 读取，防 XSS
+sameSite：防止跨站请求伪造
+
+13.Redux 数据改变后，是否会引起全部组件的重新渲染？
+·  只有用到了被修改数据的组件才会重新渲染，没用到的不会。
+·  ·  核心原理组件会通过 selector 从仓库里精准订阅自己需要的数据，数据没变就不更新。
+·  ·  什么情况会误触发全量重渲染
+·  直接返回整个 state，不做数据筛选
+每次返回新引用（浅拷贝 / 新对象），导致组件误以为数据变了
+
+14.Vue中的nextTick实现原理是什么？
+等待DOM 更新完成后，再执行回调，确保能拿到最新 DOM。
+2. 实现原理
+Vue 更新 DOM 是异步批处理的，数据变化不会立即更新 DOM
+nextTick 利用微任务队列（Promise、MutationObserver 等）
+将回调推入微任务，在DOM 更新后、浏览器渲染前执行
+3. 本质
+把回调放到异步队列末尾，等 Vue 完成 DOM 更新后再执行。
+
+15.简单描述下vue 中keep-alive 的实现原理？
+·  本质：Vue 内置的组件缓存抽象组件
+·  原理
+把需要缓存的组件实例存到内存中，不销毁
+切换时不重新创建、不卸载，直接从缓存取出复用
+通过 include/exclude 控制缓存范围
+·  作用保留组件状态、避免重复渲染、提升切换性能
+
+16.React fiber 架构是什么，解决了什么问题？
+是 React 16 后的新协调引擎，把虚拟 DOM 对比过程拆分成小任务单元，支持可中断、可恢复、可优先级调度。
+2. 解决了什么问题
+解决旧架构同步阻塞主线程导致的：
+页面卡顿
+动画掉帧
+交互延迟
+3. 核心价值
+让渲染过程不阻塞浏览器，实现流畅、高响应的用户界面。
+
+17. 什么是react 闭包陷阱？ 如何解决？
+组件渲染时，事件 / 异步函数捕获了旧的 state/props导致执行时拿到的是过时值，不是最新值。
+2. 产生原因
+函数组件每次渲染都是独立闭包，捕获当时的变量快照。
+3. 如何解决
+使用 useRef 存储最新值（不受闭包影响）
+配合 useEffect 正确处理依赖
+使用 函数式更新 state
+
+18.手写代码。实现promise.all？
+接收Promise 数组，全部成功则返回结果数组；任意一个失败，直接返回失败。
+2. 实现步骤
+创建新 Promise 返回
+遍历传入的 Promise，计数 + 收集结果
+每个成功：存结果、计数 + 1
+全部成功：resolve (结果数组)
+任意失败：reject (错误)
+3. 关键点
+按传入顺序返回结果
+并发执行，全部完成才成功
+短路机制：一个失败整体失败
+
+19. 再前端开发中，如何保障图片的清晰度？
+·  适配设备像素比（DPR/Retina）用 2x/3x 图，或设置 image-rendering，避免图片被拉伸模糊。
+·  ·  控制图片尺寸图片实际宽高 ≥ 渲染宽高，不要小图拉大。
+·  ·  使用合适格式
+·  照片：WebP/AVIF
+图标：SVG
+透明图：WebP
+·  合理压缩压缩后肉眼无差，但体积更小、加载更清晰不糊。
+·  ·  CSS 优化避免拉伸、设置 object-fit: cover 保持比例。
+·  
+20.如何设计一个并发请求的控制队列，再同一时刻，只能有3个接口的并发请求
+核心设计思路
+维护一个请求队列 + 一个当前并发计数器
+同一时刻最多允许 3 个请求同时执行
+一个请求结束 → 计数器 - 1 → 从队列取出下一个执行
+2. 执行流程
+1.所有请求先进入队列
+2.判断当前并发数 < 3：立即执行，并发数 + 1
+3.达到 3 个：排队等待
+4.任意请求完成：自动启动队列里的下一个
+3. 关键点
+控制最大并发数 = 3
+先进先出，不阻塞、不爆请求
+全部执行完返回结果（类似 Promise.all，但可控并发）
+
+
+999999999999999999999999999999999999999999999
+
+1.如何通过配置webpack ,解决首页白屏问题？
+通过代码分割（SplitChunks）+ 路由懒加载 + 预加载关键资源（preload）+ 服务端渲染（SSR）或骨架屏，减少首屏 JS 体积和加载时间
+2.1000万行的大数据表，应该如何进行优化？
+分库分表、加合理索引、读写分离、归档历史数据、使用缓存（如 Redis）、避免 SELECT *、优化查询语句。
+3.在Vue 3中，Teleport是做什么的，如果自己实现相同的功能，该如何实现？
+Teleport 把组件渲染到 DOM 树任意位置（如 body），自己实现可用 createApp 挂载到指定容器，配合 v-if 控制显隐。
+4.Pinia 和Vuex 的区别？
+Pinia 更轻量、TypeScript 友好、无 mutations、支持组合式 API，Vuex 功能全但配置繁琐、更适合大型复杂状态管理。
+5.说说git 进行版本回退有几种方式？
+git reset（回退提交且可选保留/丢弃更改）、git revert（新增反向提交，安全）、git checkout（临时查看旧版本）
+6.Git reset 有哪些选项参数，含义是什么？
+soft：回退 commit，保留暂存区和工作区；
+mixed（默认）：回退 commit 和暂存区，保留工作区；
+hard：彻底回退，丢弃所有更改。
+7.Dedicated worker 和sharedworker 的区别是什么？
+前者仅被一个页面使用，后者可被同源多个 tab 共享，适合跨窗口通信。
+8.简述你在工作中，使用git 的基本步骤是什么？
+拉最新代码 → 新建分支 → 写代码 → 提交（commit）→ 推送（push）→ 提 PR/MR → 合并 → 删除分支
+9.如果让你设计一个通用组件，你的基本思路是什么？
+明确职责、props 接口清晰、支持插槽/事件扩展、样式可定制、文档完善、考虑无障碍和响应式。
+10. 手写一段代码，实现new 关键字相同的功能
+function myNew(Constructor, ...args) {
+  const obj = Object.create(Constructor.prototype);
+  const result = Constructor.apply(obj, args);
+  return result instanceof Object ? result : obj;
+}
+11. 什么是虚拟dom ,为什么vue和react都在自己的框架中使用虚拟dom?
+用 JS 对象模拟真实 DOM，通过 diff 算法最小化更新操作，提升性能，避免频繁直接操作 DOM。
+12.如何解决浏览器跨域问题？
+开发用代理（webpack devServer.proxy），生产用 CORS（后端设 Access-Control-Allow-Origin），或 JSONP（仅 GET）、Nginx 反向代理
+13.如何通过Webpack优化Vue项目的打包速度和大小？
+拆包（SplitChunks）、压缩（Terser）、移除未用代码（Tree-shaking）、CDN 外链、启用持久缓存、按需引入 UI 库
+14.在评测一个页面加载速度时，可以从哪些指标进行观察，每个指标的简写及代表意义是什么？
+FP（First Paint）：首次绘制；
+FCP（First Contentful Paint）：首次有内容绘制；
+LCP（Largest Contentful Paint）：最大内容渲染；
+TTI（Time to Interactive）：可交互时间；
+15.请描述泛型的概念及作用？
+泛型让函数/类/接口能处理多种类型而不失类型安全，比如 function identity<T>(arg: T): T，提高代码复用和类型推断能力。
+16.简述浏览器的强缓存和协商缓存？
+强缓存（Cache-Control/Expires）直接用本地副本不发请求；协商缓存（ETag/Last-Modified）发请求比对是否更新
+17.简述大文件下载的基本实现思路？
+前端用 Blob + URL.createObjectURL 或流式下载（StreamSaver.js），后端支持 Range 分片传输，避免内存溢出
+18.简述 TCP 和 UDP 协议的区别？
+TCP 可靠、有序、有连接，适合网页/文件；UDP 快速、无连接、不可靠，适合视频/游戏等实时场景。
+19.Ts 新增类型有哪些？
+如 unknown（安全版 any）、never（永不返回）、tuple（元组）、enum、type 别名、条件类型、映射类型等
+20.描述浏览器中输入URL到看到页面的过程
+DNS 解析 → 建立 TCP 连接 → 发 HTTP 请求 → 服务器返回 HTML → 浏览器解析 HTML/CSS/JS → 构建 DOM/CSSOM → 渲染页面
+
+
+
+
+1010101010101010101010101010101010
+
+1.简述Webpack与vite的区别，不少于三条
+Webpack 打包整个项目再启动开发服务器，Vite 利用原生 ES 模块按需加载，启动更快；
+Webpack 生产构建成熟稳定，Vite 更适合现代浏览器开发，生产仍依赖 Rollup。
+2.Uniapp，react-native,flutter的区别
+Uniapp 基于 Vue 写一套代码多端编译（H5/小程序/App），兼容性广但性能一般；
+React Native 用 JavaScript + React 渲染原生组件，性能较好但桥接有开销；
+Flutter 用 Dart 自绘 UI，性能接近原生，但包体积大、学习成本高。
+3.React列表循环的Key有什么作用？
+Key 帮助 React 识别哪些元素变了、新增或删除，提升 Diff 效率，避免状态错乱。
+4.描述原型和原型链？
+每个 JS 对象都有一个原型（proto），指向其构造函数的 prototype；通过原型链，对象可继承上级属性和方法，直到 Object.prototype。
+5.请解释 websocket 的心跳机制？
+客户端和服务器定期互发“心跳”消息，用于检测连接是否存活，防止因长时间无数据被中间设备断开。
+6.请描述 redux 的概念及使用流程？
+Redux 是集中管理应用状态的库，流程：组件 dispatch action → reducer 根据 action 更新 state → store 通知组件重新渲染。
+7.什么是事件循环（Event Loop）？它如何影响异步代码执行，浏览器的事件循环和node.js中有什么区别？
+Event Loop 负责协调同步任务、宏任务（如 setTimeout）和微任务（如 Promise）的执行顺序；浏览器和 Node.js 在宏任务队列实现和优先级上有差异（如 Node 早期版本 I/O 优先）。
+8.Vue项目，尤其是vue3，如何做优化？
+使用 Composition API 减少冗余、懒加载路由、keep-alive 缓存组件、v-memo 减少重复渲染、Tree-shaking 移除未用代码。
+9.WebAssembly是什么？何时应该考虑使用WebAssembly而不是纯JavaScript？
+WebAssembly 是高性能二进制格式，适合计算密集型任务（如图像处理、游戏），当 JS 性能不足时可考虑使用。
+10.列举你知道的react的数据共享方案，并说出他们的优劣？
+Context：简单但更新会触发所有消费者重渲染；
+Redux：强大但样板代码多；
+Zustand/Jotai：轻量、响应式好，适合中小型项目；
+React Query：专注服务端状态，自动缓存/同步。
+11.如何理解 script 标签的 defer 属性和 async 属性？
+defer 脚本等 HTML 解析完后按顺序执行，不阻塞；async 脚本下载完就立即执行，可能乱序，都用于优化加载性能。
+12.如何理解重绘，回流机制？
+回流（reflow）是布局变动导致重新计算位置/尺寸，代价高；重绘（repaint）是样式变但布局不变（如颜色），代价较低；回流必引发重绘，反之不然。
+13.浏览器存储APIs（localStorage, sessionStorage, IndexedDB等）各自的优缺点是什么，如何保证其安全性？
+localStorage/sessionStorage 简单但易受 XSS 攻击，不存敏感信息；IndexedDB 容量大但同样不安全；应配合 CSP、HttpOnly Cookie、加密等手段提升安全。
+14.如何通过Webpack优化Vue项目的打包速度和大小？
+用 SplitChunks 分割代码、启用 Gzip/Brotli 压缩、移除未用 CSS/JS（PurgeCSS）、使用 CDN 外链第三方库、开启缓存（cache-loader 或持久缓存）。
+15.Img的srcset属性的作用？
+根据屏幕分辨率或 viewport 宽度，让浏览器自动选择最合适的图片源，提升加载速度和体验。
+16.解释盒模型，并描述标准盒模型和IE盒模型的区别？
+标准盒模型 width 只含内容区，IE 盒模型 width 包含 padding 和 border；可通过 box-sizing: border-box 切换为 IE 行为。
+17.如何基于用户行为或偏好动态加载不同的Vue组件？
+用 defineAsyncComponent 结合 import() 动态导入，根据用户偏好（如语言、角色）条件加载不同组件。
+18.短轮询、长轮询和 WebSocket 间的区别？
+短轮询频繁请求浪费资源；长轮询一次请求挂起直到有数据，减少请求次数；WebSocket 全双工实时通信，效率最高。
+19.响应式布局如何实现，详细说说实现思路？
+用媒体查询（@media）适配不同屏幕，结合 rem/vw 单位、弹性盒子（Flex）或网格（Grid），配合移动优先设计。
+20.使用Promise.allSettled()相较于Promise.all()有何优势？每道题总结一句话尽量使用白话
+allSettled 等所有 Promise 完成（无论成功失败）都返回结果，all 遇到任一 reject 就中断，前者更适合需全部结果的场景。
