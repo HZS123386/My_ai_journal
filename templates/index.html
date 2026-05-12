@@ -316,6 +316,27 @@
                                       aria-describedby="contentHint"
                                       rows="6"></textarea>
                             <span class="input-helper" id="contentHint">记录您的想法、感受和经历</span>
+                            <div class="voice-toolbar" aria-label="语音输入工具">
+                                <button class="btn btn-secondary voice-btn" type="button" id="recordBtn" onclick="toggleRecording()" aria-label="开始语音输入">
+                                    <svg class="voice-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+                                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                                        <line x1="12" y1="19" x2="12" y2="22"></line>
+                                        <line x1="8" y1="22" x2="16" y2="22"></line>
+                                    </svg>
+                                    <span id="recordBtnText">语音输入</span>
+                                </button>
+                                <button class="btn btn-outline voice-upload-btn" type="button" id="audioUploadBtn" onclick="openAudioFilePicker()" aria-label="上传录音文件">
+                                    <svg class="voice-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="17 8 12 3 7 8"></polyline>
+                                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                                    </svg>
+                                    <span>上传录音</span>
+                                </button>
+                                <input id="audioFileInput" type="file" accept=".flac,.mp3,.mp4,.mpeg,.mpga,.m4a,.ogg,.wav,.webm,audio/*" hidden onchange="handleAudioFileInput(event)">
+                                <span class="voice-status" id="voiceStatus" role="status" aria-live="polite">录音会由本地 faster-whisper 转写为文本</span>
+                            </div>
                         </div>
                         <div class="card-footer">
                             <div class="button-row">
@@ -390,6 +411,13 @@
     </div>
 
     <script>
+        const AUDIO_SIZE_LIMIT = 25 * 1024 * 1024;
+        const AUDIO_EXTENSIONS = [".flac", ".mp3", ".mp4", ".mpeg", ".mpga", ".m4a", ".ogg", ".wav", ".webm"];
+        let mediaRecorder = null;
+        let voiceStream = null;
+        let recordedChunks = [];
+        let isRecording = false;
+
         function setAuthMessage(msg) {
             const authMessage = document.getElementById("authMessage");
             authMessage.textContent = msg;
@@ -601,6 +629,22 @@
             document.getElementById("entries").scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
+        function escapeHtml(value) {
+            return String(value ?? "").replace(/[&<>"']/g, char => ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#39;"
+            }[char]));
+        }
+
+        function normalizeMood(mood) {
+            const allowedMoods = new Set(["开心", "焦虑", "平静", "疲惫", "沮丧", "未知"]);
+            const value = String(mood || "未知");
+            return allowedMoods.has(value) ? value : "未知";
+        }
+
         async function loadHistory() {
             const container = document.getElementById("historyList");
             if (!container) return;
@@ -635,13 +679,18 @@
                 }
 
                 data.forEach(entry => {
+                    const entryId = Number(entry.id);
+                    if (!Number.isInteger(entryId)) return;
+
                     const preview = entry.content.substring(0, 40) + (entry.content.length > 40 ? "..." : "");
+                    const previewHtml = escapeHtml(preview);
+                    const dateHtml = escapeHtml(formatDate(entry.created_at));
                     const html = `
                         <button class="history-item" 
-                                onclick="viewEntry(${entry.id})"
-                                aria-label="查看日记: ${preview}">
-                            <span class="history-preview">${preview}</span>
-                            <span class="history-date">${formatDate(entry.created_at)}</span>
+                                onclick="viewEntry(${entryId})"
+                                aria-label="查看日记: ${previewHtml}">
+                            <span class="history-preview">${previewHtml}</span>
+                            <span class="history-date">${dateHtml}</span>
                         </button>
                     `;
                     container.innerHTML += html;
@@ -709,27 +758,35 @@
                 }
 
                 data.forEach(entry => {
-                    const todosHtml = (entry.todos || []).length
-                        ? `<ul class="todo-list" role="list">${entry.todos.map((todo, i) => `<li role="listitem"><span class="todo-number">${i + 1}</span>${todo}</li>`).join("")}</ul>`
+                    const entryId = Number(entry.id);
+                    if (!Number.isInteger(entryId)) return;
+
+                    const mood = normalizeMood(entry.mood);
+                    const contentHtml = escapeHtml(entry.content);
+                    const summaryHtml = escapeHtml(entry.summary || "暂无总结");
+                    const dateHtml = escapeHtml(formatDate(entry.created_at));
+                    const todos = Array.isArray(entry.todos) ? entry.todos : [];
+                    const todosHtml = todos.length
+                        ? `<ul class="todo-list" role="list">${todos.map((todo, i) => `<li role="listitem"><span class="todo-number">${i + 1}</span>${escapeHtml(todo)}</li>`).join("")}</ul>`
                         : `<p class="no-todo">暂无待办</p>`;
 
                     const html = `
-                        <article class="card entry-card animate-fadeIn" aria-labelledby="entry-${entry.id}-title">
+                        <article class="card entry-card animate-fadeIn" aria-labelledby="entry-${entryId}-title">
                             <div class="entry-header">
-                                <div class="entry-mood mood-${entry.mood || "未知"}" aria-label="心情: ${entry.mood || '未知'}">
-                                    <span>${entry.mood || "未知"}</span>
+                                <div class="entry-mood mood-${mood}" aria-label="心情: ${mood}">
+                                    <span>${mood}</span>
                                 </div>
-                                <div class="entry-meta">${formatDate(entry.created_at)}</div>
+                                <div class="entry-meta">${dateHtml}</div>
                             </div>
 
                             <div class="entry-section">
-                                <h3 class="section-title" id="entry-${entry.id}-title">原文</h3>
-                                <p class="entry-content">${entry.content}</p>
+                                <h3 class="section-title" id="entry-${entryId}-title">原文</h3>
+                                <p class="entry-content">${contentHtml}</p>
                             </div>
 
                             <div class="entry-section">
                                 <h3 class="section-title">AI 总结</h3>
-                                <p class="entry-summary">${entry.summary || "暂无总结"}</p>
+                                <p class="entry-summary">${summaryHtml}</p>
                             </div>
 
                             <div class="entry-section">
@@ -737,8 +794,8 @@
                                 ${todosHtml}
                             </div>
 
-                            <button class="entry-delete-btn" 
-                                    onclick="deleteEntry(${entry.id})" 
+                            <button class="entry-delete-btn"
+                                    onclick="deleteEntry(${entryId})"
                                     aria-label="删除这条日记"
                                     title="删除日记">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -758,6 +815,248 @@
                         <p>加载失败，请刷新页面重试</p>
                     </div>
                 `;
+            }
+        }
+
+        function setVoiceStatus(message) {
+            const voiceStatus = document.getElementById("voiceStatus");
+            if (voiceStatus) {
+                voiceStatus.textContent = message;
+            }
+        }
+
+        function getSupportedRecordingMimeType() {
+            if (!window.MediaRecorder) return "";
+
+            const mimeTypes = [
+                "audio/webm;codecs=opus",
+                "audio/webm",
+                "audio/mp4",
+                "audio/wav"
+            ];
+
+            return mimeTypes.find(type => MediaRecorder.isTypeSupported(type)) || "";
+        }
+
+        function audioExtensionFromMimeType(mimeType) {
+            if (mimeType.includes("mp4")) return "m4a";
+            if (mimeType.includes("wav")) return "wav";
+            return "webm";
+        }
+
+        function setRecordingButtonState(recording) {
+            const recordBtn = document.getElementById("recordBtn");
+            const recordBtnText = document.getElementById("recordBtnText");
+            const audioUploadBtn = document.getElementById("audioUploadBtn");
+
+            if (!recordBtn || !recordBtnText) return;
+
+            isRecording = recording;
+            recordBtn.classList.toggle("is-recording", recording);
+            recordBtn.setAttribute("aria-label", recording ? "停止语音输入" : "开始语音输入");
+            recordBtnText.textContent = recording ? "停止录音" : "语音输入";
+
+            if (audioUploadBtn) {
+                audioUploadBtn.disabled = recording;
+            }
+        }
+
+        function setVoiceControlsBusy(busy) {
+            const recordBtn = document.getElementById("recordBtn");
+            const audioUploadBtn = document.getElementById("audioUploadBtn");
+
+            if (recordBtn) recordBtn.disabled = busy;
+            if (audioUploadBtn) audioUploadBtn.disabled = busy;
+        }
+
+        function openAudioFilePicker() {
+            document.getElementById("audioFileInput").click();
+        }
+
+        async function toggleRecording() {
+            if (isRecording) {
+                stopRecording();
+                return;
+            }
+
+            await startRecording();
+        }
+
+        async function startRecording() {
+            if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
+                setVoiceStatus("当前浏览器不支持直接录音，可上传录音文件");
+                showToast("当前浏览器不支持直接录音", "warning");
+                return;
+            }
+
+            try {
+                const mimeType = getSupportedRecordingMimeType();
+                voiceStream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                    }
+                });
+
+                mediaRecorder = new MediaRecorder(
+                    voiceStream,
+                    mimeType ? { mimeType } : {}
+                );
+                recordedChunks = [];
+
+                mediaRecorder.addEventListener("dataavailable", event => {
+                    if (event.data && event.data.size > 0) {
+                        recordedChunks.push(event.data);
+                    }
+                });
+
+                mediaRecorder.addEventListener("stop", () => {
+                    handleRecordingStopped(mediaRecorder.mimeType || mimeType);
+                });
+
+                mediaRecorder.start();
+                setRecordingButtonState(true);
+                setVoiceStatus("正在录音，点击停止后自动识别");
+            } catch (error) {
+                releaseVoiceStream();
+                setRecordingButtonState(false);
+                setVoiceStatus("无法访问麦克风，请检查浏览器权限");
+                showToast("无法访问麦克风", "error");
+                console.error("录音启动失败:", error);
+            }
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state !== "inactive") {
+                mediaRecorder.stop();
+                setVoiceStatus("录音结束，正在准备识别...");
+            }
+        }
+
+        function releaseVoiceStream() {
+            if (voiceStream) {
+                voiceStream.getTracks().forEach(track => track.stop());
+                voiceStream = null;
+            }
+        }
+
+        async function handleRecordingStopped(mimeType) {
+            releaseVoiceStream();
+            setRecordingButtonState(false);
+
+            if (!recordedChunks.length) {
+                setVoiceStatus("没有录到声音，请重试");
+                return;
+            }
+
+            const blob = new Blob(recordedChunks, { type: mimeType || "audio/webm" });
+            recordedChunks = [];
+
+            if (blob.size > AUDIO_SIZE_LIMIT) {
+                setVoiceStatus("录音过大，请控制在 25MB 以内");
+                showToast("录音文件过大", "error");
+                return;
+            }
+
+            const extension = audioExtensionFromMimeType(mimeType || "");
+            const audioFile = new File([blob], `journal-recording.${extension}`, {
+                type: mimeType || "audio/webm"
+            });
+
+            await transcribeAudioFile(audioFile);
+        }
+
+        async function handleAudioFileInput(event) {
+            const file = event.target.files?.[0];
+            event.target.value = "";
+
+            if (!file) return;
+            await transcribeAudioFile(file);
+        }
+
+        function validateAudioFile(file) {
+            const name = file.name.toLowerCase();
+            const isAllowedExtension = AUDIO_EXTENSIONS.some(ext => name.endsWith(ext));
+
+            if (!isAllowedExtension) {
+                showToast("不支持的音频格式", "error");
+                setVoiceStatus("支持 flac、mp3、mp4、mpeg、mpga、m4a、ogg、wav、webm");
+                return false;
+            }
+
+            if (file.size > AUDIO_SIZE_LIMIT) {
+                showToast("音频文件过大", "error");
+                setVoiceStatus("音频文件需控制在 25MB 以内");
+                return false;
+            }
+
+            return true;
+        }
+
+        function appendTranscriptToContent(text) {
+            const contentInput = document.getElementById("content");
+            const currentContent = contentInput.value;
+            const separator = currentContent.trim() && !currentContent.endsWith("\n") ? "\n" : "";
+
+            contentInput.value = `${currentContent}${separator}${text}`;
+            contentInput.focus();
+            contentInput.selectionStart = contentInput.selectionEnd = contentInput.value.length;
+        }
+
+        async function transcribeAudioFile(file) {
+            if (!validateAudioFile(file)) return;
+
+            const token = getToken();
+            if (!token) {
+                showToast("请先登录", "warning");
+                showApp();
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            setVoiceControlsBusy(true);
+            setVoiceStatus("正在上传并识别语音...");
+
+            try {
+                const res = await fetch("/speech/transcribe", {
+                    method: "POST",
+                    headers: { "Authorization": `Bearer ${token}` },
+                    body: formData
+                });
+
+                const data = await res.json().catch(() => ({}));
+
+                if (res.status === 401) {
+                    localStorage.removeItem("token");
+                    setAuthMessage("登录已过期，请重新登录");
+                    showApp();
+                    return;
+                }
+
+                if (!res.ok) {
+                    const message = data.detail || "语音识别失败";
+                    setVoiceStatus(message);
+                    showToast(message, "error");
+                    return;
+                }
+
+                if (!data.text) {
+                    setVoiceStatus("没有识别到有效内容");
+                    showToast("没有识别到有效内容", "warning");
+                    return;
+                }
+
+                appendTranscriptToContent(data.text);
+                setVoiceStatus("识别完成，已加入日记内容");
+                showToast("语音识别完成", "success");
+            } catch (error) {
+                setVoiceStatus("语音识别请求失败，请稍后重试");
+                showToast("语音识别请求失败", "error");
+                console.error("语音识别失败:", error);
+            } finally {
+                setVoiceControlsBusy(false);
             }
         }
 
@@ -891,7 +1190,11 @@
                 (data.key_todos || []).forEach((todo, i) => {
                     const li = document.createElement("li");
                     li.setAttribute('role', 'listitem');
-                    li.innerHTML = `<span class="todo-number">${i + 1}</span>${todo}`;
+                    const number = document.createElement("span");
+                    number.className = "todo-number";
+                    number.textContent = i + 1;
+                    li.appendChild(number);
+                    li.appendChild(document.createTextNode(String(todo)));
                     todosEl.appendChild(li);
                 });
 

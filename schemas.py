@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr
 from datetime import datetime
 from typing import Optional, List
 
@@ -19,13 +19,12 @@ class UserLogin(BaseModel):
 
 
 class UserResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     username: str
     email: EmailStr
     created_at: datetime
-
-    class Config:
-        from_attributes = True
 
 
 class TokenResponse(BaseModel):
@@ -42,6 +41,8 @@ class EntryCreate(BaseModel):
 
 
 class EntryResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     content: str
     summary: Optional[str] = None
@@ -49,6 +50,3 @@ class EntryResponse(BaseModel):
     todos: Optional[List[str]] = None
     created_at: datetime
     user_id: Optional[int] = None
-
-    class Config:
-        from_attributes = True

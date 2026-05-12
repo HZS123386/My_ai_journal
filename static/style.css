@@ -795,6 +795,62 @@ textarea::placeholder {
   color: var(--color-gray-400);
 }
 
+/* Voice Input */
+.voice-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.voice-btn,
+.voice-upload-btn {
+  min-height: 40px;
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-sm);
+}
+
+.voice-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.voice-btn.is-recording {
+  background: rgba(239, 68, 68, 0.18);
+  color: var(--color-error);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+}
+
+.voice-btn.is-recording::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: var(--color-error);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.voice-status {
+  flex: 1;
+  min-width: 180px;
+  font-size: var(--text-xs);
+  color: var(--color-gray-400);
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
 /* Button Row */
 .button-row {
   display: flex;

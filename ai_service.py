@@ -1,16 +1,58 @@
 import os
 import json
+import tempfile
+from pathlib import Path
 from openai import OpenAI, APITimeoutError
 from dotenv import load_dotenv
 
 load_dotenv(override=True)
+os.environ.setdefault("HF_HUB_DISABLE_SYMLINKS_WARNING", "1")
 
-client = OpenAI(
-    api_key=os.getenv("DEEPSEEK_API_KEY"),
-    base_url="https://api.deepseek.com",
-    timeout=90,
-    max_retries=2,
-)
+_text_client = None
+_whisper_model = None
+_whisper_model_config = None
+
+
+def _get_text_client() -> OpenAI:
+    global _text_client
+
+    api_key = os.getenv("DEEPSEEK_API_KEY") or os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise RuntimeError("缺少 DEEPSEEK_API_KEY，无法使用 AI 文本分析")
+
+    if _text_client is None:
+        _text_client = OpenAI(
+            api_key=api_key,
+            base_url="https://api.deepseek.com",
+            timeout=90,
+            max_retries=2,
+        )
+
+    return _text_client
+
+
+def _get_whisper_model():
+    global _whisper_model, _whisper_model_config
+
+    try:
+        from faster_whisper import WhisperModel
+    except ImportError as exc:
+        raise RuntimeError("缺少 faster-whisper 依赖，请先执行 python -m pip install -r requirements.txt") from exc
+
+    model_size = os.getenv("WHISPER_MODEL_SIZE", "small")
+    device = os.getenv("WHISPER_DEVICE", "cpu")
+    compute_type = os.getenv("WHISPER_COMPUTE_TYPE", "int8")
+    config = (model_size, device, compute_type)
+
+    if _whisper_model is None or _whisper_model_config != config:
+        _whisper_model = WhisperModel(
+            model_size,
+            device=device,
+            compute_type=compute_type,
+        )
+        _whisper_model_config = config
+
+    return _whisper_model, model_size
 
 
 def _clean_json_text(text: str) -> str:
@@ -62,7 +104,7 @@ def analyze_entry(content: str) -> dict:
 """
 
     try:
-        response = client.chat.completions.create(
+        response = _get_text_client().chat.completions.create(
             model="deepseek-chat",
             messages=[
                 {"role": "system", "content": "你是一个中文日记分析助手，只返回 JSON。"},
@@ -133,7 +175,7 @@ def generate_weekly_report(entries: list[dict]) -> dict:
 """
 
     try:
-        response = client.chat.completions.create(
+        response = _get_text_client().chat.completions.create(
             model="deepseek-chat",
             messages=[
                 {"role": "system", "content": "你是一个中文周报助手，只返回 JSON。"},
@@ -199,7 +241,7 @@ def summarize_file_content(content: str) -> dict:
 """
 
     try:
-        response = client.chat.completions.create(
+        response = _get_text_client().chat.completions.create(
             model="deepseek-chat",
             messages=[
                 {"role": "system", "content": "你是一个专业的文档总结助手，只返回 JSON。"},
@@ -231,6 +273,50 @@ def summarize_file_content(content: str) -> dict:
             "key_points": [],
             "category": "其他",
         }
+
+
+def transcribe_audio(audio_content: bytes, filename: str) -> dict:
+    """
+    使用本地 faster-whisper 模型把录音转成日记文本。
+    """
+    language = os.getenv("WHISPER_LANGUAGE", "zh").strip() or None
+    beam_size = int(os.getenv("WHISPER_BEAM_SIZE", "5"))
+    suffix = Path(filename or "journal-audio.webm").suffix or ".webm"
+
+    try:
+        model, model_size = _get_whisper_model()
+        fd, audio_path = tempfile.mkstemp(suffix=suffix)
+        os.close(fd)
+
+        try:
+            with open(audio_path, "wb") as audio_file:
+                audio_file.write(audio_content)
+
+            segments, info = model.transcribe(
+                audio_path,
+                language=language,
+                beam_size=beam_size,
+                vad_filter=True,
+                vad_parameters={"min_silence_duration_ms": 500},
+                initial_prompt="以下是一段中文个人日记录音，请转写为自然、可阅读的中文文本。",
+            )
+
+            text = "".join(segment.text.strip() for segment in segments).strip()
+        finally:
+            if os.path.exists(audio_path):
+                os.remove(audio_path)
+
+        return {
+            "text": text,
+            "model": f"faster-whisper-{model_size}",
+            "language": getattr(info, "language", language or ""),
+        }
+
+    except RuntimeError:
+        raise
+    except Exception as exc:
+        print("本地语音识别失败：", repr(exc))
+        raise RuntimeError(f"本地语音识别失败：{exc}") from exc
 
 
 

@@ -18,7 +18,7 @@ from schemas import (
     UserResponse,
     TokenResponse,
 )
-from ai_service import analyze_entry, generate_weekly_report as generate_weekly_report_ai, summarize_file_content
+from ai_service import analyze_entry, generate_weekly_report as generate_weekly_report_ai, summarize_file_content, transcribe_audio
 from auth import hash_password, verify_password, create_access_token, decode_access_token
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
@@ -29,6 +29,8 @@ MAX_FILE_SIZE = 50 * 1024 * 1024  # 50MB 单文件大小限制
 CHUNK_SIZE = 1 * 1024 * 1024      # 每个分片 1MB
 TEMP_DIR = "temp_uploads"          # 临时分片存储目录
 UPLOAD_DIR = "uploads"             # 最终文件存储目录
+MAX_AUDIO_SIZE = 25 * 1024 * 1024  # 本地语音转写单次音频大小限制
+ALLOWED_AUDIO_EXTENSIONS = {'.flac', '.mp3', '.mp4', '.mpeg', '.mpga', '.m4a', '.ogg', '.wav', '.webm'}
 
 # 创建必要的目录
 os.makedirs(TEMP_DIR, exist_ok=True)
@@ -168,6 +170,59 @@ def list_entries(
             .order_by(Entry.id.desc())
             .all()
     )
+
+
+@app.get("/entries/{entry_id}", response_model=EntryResponse, summary="获取日记详情")
+def get_entry(
+        entry_id: int,
+        db: Session = Depends(get_db),
+        current_user: User = Depends(get_current_user)
+):
+    entry = (
+        db.query(Entry)
+        .filter(Entry.id == entry_id, Entry.user_id == current_user.id)
+        .first()
+    )
+
+    if not entry:
+        raise HTTPException(status_code=404, detail="未找到该日记")
+
+    return entry
+
+
+@app.post("/speech/transcribe", summary="语音转写")
+async def transcribe_speech(
+        file: UploadFile = File(...),
+        current_user: User = Depends(get_current_user)
+):
+    filename = file.filename or "journal-audio.webm"
+    file_extension = os.path.splitext(filename)[1].lower()
+
+    if file_extension not in ALLOWED_AUDIO_EXTENSIONS:
+        raise HTTPException(
+            status_code=400,
+            detail="不支持的音频格式。支持 flac、mp3、mp4、mpeg、mpga、m4a、ogg、wav、webm"
+        )
+
+    try:
+        audio_content = await file.read()
+    except Exception:
+        raise HTTPException(status_code=500, detail="音频读取失败")
+
+    if not audio_content:
+        raise HTTPException(status_code=400, detail="音频文件为空")
+
+    if len(audio_content) > MAX_AUDIO_SIZE:
+        raise HTTPException(status_code=413, detail="音频文件过大，最大支持 25MB")
+
+    try:
+        return transcribe_audio(audio_content, filename)
+    except ValueError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
+    except TimeoutError as exc:
+        raise HTTPException(status_code=504, detail=str(exc))
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
 
 #删除
 @app.delete("/entries/{entry_id}", summary="删除日记")
