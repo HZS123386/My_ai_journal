@@ -65,11 +65,11 @@
                             <span class="theme-icon">🌙</span>
                             <span class="theme-text">深色</span>
                         </button>
-                        <div class="user-info-nav">
+                        <div class="user-info-nav" id="navUserInfo">
                             <span class="user-greeting-nav">你好</span>
                             <span class="user-name-nav" id="currentUserText"></span>
                         </div>
-                        <button class="btn btn-ghost btn-sm" onclick="logout()" aria-label="退出登录">
+                        <button class="btn btn-ghost btn-sm" id="logoutBtn" onclick="logout()" aria-label="退出登录">
                             <span>退出</span>
                         </button>
                     </div>
@@ -433,12 +433,18 @@
             const authBox = document.getElementById("authBox");
             const appBox = document.getElementById("appBox");
             const sidebar = document.getElementById("sidebar");
+            const sidebarToggle = document.getElementById("sidebarToggle");
+            const navUserInfo = document.getElementById("navUserInfo");
+            const logoutBtn = document.getElementById("logoutBtn");
             const isDesktop = window.innerWidth >= 1024;
             
             if (token) {
                 authBox.style.display = "none";
                 appBox.style.display = "block";
                 sidebar.style.display = "flex";
+                sidebarToggle.style.display = "";
+                navUserInfo.style.display = "flex";
+                logoutBtn.style.display = "inline-flex";
                 
                 if (isDesktop) {
                     sidebar.classList.add("sidebar-visible");
@@ -455,6 +461,9 @@
                 authBox.style.display = "block";
                 appBox.style.display = "none";
                 sidebar.style.display = "none";
+                sidebarToggle.style.display = "none";
+                navUserInfo.style.display = "none";
+                logoutBtn.style.display = "none";
             }
         }
 

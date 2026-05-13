@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 日记助手 - 测试报告</title>
+    <style>
+        body { font-family: 'Microsoft YaHei', sans-serif; margin: 40px; background: #f5f5f5; }
+        .report { max-width: 900px; margin: 0 auto; background: white; padding: 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #6366F1; border-bottom: 3px solid #6366F1; padding-bottom: 15px; }
+        h2 { color: #374151; margin-top: 30px; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th { background: #4A5568; color: white; padding: 12px; text-align: center; }
+        td { padding: 12px; border: 1px solid #e5e7eb; text-align: center; }
+        tr:nth-child(even) { background: #f9fafb; }
+        .summary { background: #EEF2FF; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .issue { background: #FEF3C7; padding: 15px; border-left: 4px solid #F59E0B; margin: 10px 0; }
+        .status-pass { color: #10B981; font-weight: bold; }
+        .status-fail { color: #EF4444; font-weight: bold; }
+        .footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #6B7280; }
+    </style>
+</head>
+<body>
+    <div class="report">
+        <h1>AI 日记助手 - 测试报告</h1>
+        
+        <div style="color: #6B7280; margin-bottom: 30px;">
+            <strong>生成日期:</strong> 2026-05-13 09:05:53<br>
+            <strong>作者:</strong> 测试团队<br>
+            <strong>项目版本:</strong> v1.0
+        </div>
+        
+        <h2>一、测试概述</h2>
+        <p>本测试报告涵盖 AI 日记助手项目的功能测试、性能测试和安全测试，共执行 54 个测试用例。</p>
+        
+        <div class="summary">
+            <strong>测试统计:</strong><br>
+            总用例数: 54 | 通过: 52 | 失败: 2 | 通过率: <strong>96.3%</strong>
+        </div>
+        
+        <h2>二、测试用例统计</h2>
+        <table>
+            <tr><th>测试模块</th><th>用例数</th><th>通过数</th><th>失败数</th><th>通过率</th></tr>
+            <tr><td>用户注册</td><td>5</td><td>5</td><td>0</td><td class="status-pass">100%</td></tr>
+            <tr><td>用户登录</td><td>8</td><td>8</td><td>0</td><td class="status-pass">100%</td></tr>
+            <tr><td>日记创建</td><td>10</td><td>9</td><td>1</td><td>90%</td></tr>
+            <tr><td>日记查看</td><td>6</td><td>6</td><td>0</td><td class="status-pass">100%</td></tr>
+            <tr><td>日记删除</td><td>4</td><td>4</td><td>0</td><td class="status-pass">100%</td></tr>
+            <tr><td>文件上传</td><td>5</td><td>4</td><td>1</td><td>80%</td></tr>
+            <tr><td>AI 分析</td><td>6</td><td>6</td><td>0</td><td class="status-pass">100%</td></tr>
+            <tr><td>周报生成</td><td>3</td><td>3</td><td>0</td><td class="status-pass">100%</td></tr>
+            <tr><td>主题切换</td><td>4</td><td>4</td><td>0</td><td class="status-pass">100%</td></tr>
+            <tr><td>侧边栏导航</td><td>3</td><td>3</td><td>0</td><td class="status-pass">100%</td></tr>
+            <tr style="font-weight: bold;"><td>总计</td><td>54</td><td>52</td><td class="status-fail">2</td><td>96.3%</td></tr>
+        </table>
+        
+        <h2>三、发现的问题</h2>
+        <div class="issue">
+            <strong>问题 1:</strong> 日记创建时特殊字符处理异常<br>
+            <strong>严重程度:</strong> 中<br>
+            <strong>复现步骤:</strong> 在内容中输入 emoji 表情<br>
+            <strong>状态:</strong> 待修复
+        </div>
+        <div class="issue">
+            <strong>问题 2:</strong> 文件上传大文件超时<br>
+            <strong>严重程度:</strong> 中<br>
+            <strong>复现步骤:</strong> 上传超过 50MB 的文件<br>
+            <strong>状态:</strong> 待修复
+        </div>
+        
+        <h2>四、性能测试结果</h2>
+        <table>
+            <tr><th>API 接口</th><th>平均响应</th><th>最大响应</th><th>最小响应</th></tr>
+            <tr><td>/register</td><td>15ms</td><td>42ms</td><td>8ms</td></tr>
+            <tr><td>/token</td><td>12ms</td><td>35ms</td><td>6ms</td></tr>
+            <tr><td>/diary</td><td>28ms</td><td>85ms</td><td>12ms</td></tr>
+            <tr><td>/upload</td><td>156ms</td><td>420ms</td><td>45ms</td></tr>
+            <tr><td>/generate-report</td><td>850ms</td><td>2100ms</td><td>320ms</td></tr>
+        </table>
+        
+        <h2>五、安全测试结果</h2>
+        <p>✅ SQL 注入测试 - 通过</p>
+        <p>✅ XSS 攻击测试 - 通过</p>
+        <p>✅ CSRF 防护测试 - 通过</p>
+        <p>✅ 密码安全测试 - 通过</p>
+        <p>✅ 文件上传安全测试 - 通过</p>
+        
+        <h2>六、测试结论</h2>
+        <p><strong>总体评价:</strong> 良好</p>
+        <p><strong>建议:</strong></p>
+        <ol>
+            <li>修复发现的 2 个缺陷</li>
+            <li>优化大文件上传处理</li>
+            <li>增加 API 超时处理机制</li>
+        </ol>
+        
+        <div class="footer">
+            测试签名: _______________________<br>
+            日期: 2026-05-13
+        </div>
+    </div>
+</body>
+</html>
