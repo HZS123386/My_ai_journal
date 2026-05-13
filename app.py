@@ -53,21 +53,24 @@ def get_db():
         db.close()
 
 def get_current_user(
-    token: str = Depends(oauth2_scheme),
+    token: str = Depends(oauth2_scheme),  # 自动从请求头提取 Token
     db: Session = Depends(get_db)
 ):
+    # 1. 解码 Token
     payload = decode_access_token(token)
     if not payload:
         raise HTTPException(status_code=401, detail="无效或过期的 token")
-
+    
+    # 2. 提取用户 ID
     user_id = payload.get("sub")
     if not user_id:
         raise HTTPException(status_code=401, detail="token 缺少用户信息")
-
+    
+    # 3. 查询用户
     user = db.query(User).filter(User.id == int(user_id)).first()
     if not user:
         raise HTTPException(status_code=401, detail="用户不存在")
-
+    
     return user
 
 #注册

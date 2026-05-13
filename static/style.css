@@ -412,12 +412,15 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
+  min-width: 0;
 }
 
 .nav-left {
   display: flex;
   align-items: center;
   gap: var(--space-3);
+  min-width: 0;
+  flex-shrink: 1;
 }
 
 .nav-brand {
@@ -436,6 +439,8 @@ body {
   display: flex;
   align-items: center;
   gap: var(--space-4);
+  min-width: 0;
+  flex-shrink: 0;
 }
 
 .user-info-nav {
@@ -445,17 +450,26 @@ body {
   padding: var(--space-1) var(--space-2);
   background: rgba(255, 255, 255, 0.05);
   border-radius: var(--radius-md);
+  flex: 0 1 auto;
+  min-width: max-content;
+  max-width: 160px;
+  white-space: nowrap;
 }
 
 .user-greeting-nav {
   font-size: var(--text-xs);
   color: var(--color-gray-400);
+  flex-shrink: 0;
 }
 
 .user-name-nav {
   font-size: var(--text-xs);
   font-weight: 500;
   color: var(--color-gray-200);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .nav-btn {
@@ -1179,6 +1193,18 @@ textarea::placeholder {
 }
 
 @media (max-width: 640px) {
+  .navbar-content {
+    gap: var(--space-2);
+  }
+
+  .nav-actions {
+    gap: var(--space-2);
+  }
+
+  .user-info-nav {
+    max-width: 96px;
+  }
+
   .nav-brand .brand-text {
     display: none;
   }
