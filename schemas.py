@@ -38,6 +38,7 @@ class TokenResponse(BaseModel):
 
 class EntryCreate(BaseModel):
     content: str
+    tags: Optional[list[str]] = None
 
 
 class EntryResponse(BaseModel):
@@ -48,5 +49,13 @@ class EntryResponse(BaseModel):
     summary: Optional[str] = None
     mood: Optional[str] = None
     todos: Optional[List[str]] = None
+    tags: Optional[List[str]] = None
     created_at: datetime
     user_id: Optional[int] = None
+
+class EntryListResponse(BaseModel):
+    items: List[EntryResponse]
+    total: int
+    page: int
+    page_size: int
+    pages: int

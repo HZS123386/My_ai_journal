@@ -87,10 +87,18 @@ def analyze_entry(content: str) -> dict:
 
 要求：
 1. summary: 用一句中文总结，不超过30字
-2. mood: 只能从以下5个中选1个：
-开心、焦虑、平静、疲惫、沮丧
+2. mood: 根据日记整体情绪，从以下选项中选1个：
+开心、平静、焦虑、疲惫、烦躁、沮丧、压力大、低落、充实、期待、感动
+
+情绪判断规则：
+- 如果内容出现“累、疲惫、身心俱疲、撑不住、很耗”等表达，优先判断为“疲惫”
+- 如果内容出现“烦、烦躁、心烦、不想坚持、崩溃”等表达，优先判断为“烦躁”
+- 如果内容出现“任务多、被工作填满、压力、压过来”等表达，优先判断为“压力大”
+- 如果只是安静、放松、没有明显负面情绪，才判断为“平静”
+- 不要因为结尾出现“慢慢平复、放松一下”就直接判断为“平静”，要结合全文主要情绪
 3. todos: 从日记中提取待办事项，返回字符串数组
-4. 如果没有明确待办，就返回空数组 []
+4. tags: 根据日记内容生成1到3个简短标签，返回字符串数组
+5. 如果没有明确待办，就返回空数组 []
 
 日记内容：
 {content}
@@ -98,8 +106,9 @@ def analyze_entry(content: str) -> dict:
 返回格式：
 {{
   "summary": "一句话总结",
-  "mood": "平静",
-  "todos": ["待办1", "待办2"]
+  "mood": "疲惫",
+  "todos": ["待办1", "待办2"],
+  "tags": ["工作", "情绪"]
 }}
 """
 
@@ -122,6 +131,7 @@ def analyze_entry(content: str) -> dict:
             "summary": result.get("summary", ""),
             "mood": result.get("mood", "平静"),
             "todos": result.get("todos", []),
+            "tags": result.get("tags", []),
         }
 
     except APITimeoutError:
@@ -130,6 +140,7 @@ def analyze_entry(content: str) -> dict:
             "summary": "",
             "mood": "",
             "todos": [],
+            "tags": [],
         }
 
     except Exception as e:
@@ -138,6 +149,7 @@ def analyze_entry(content: str) -> dict:
             "summary": "",
             "mood": "",
             "todos": [],
+            "tags": [],
         }
 
 

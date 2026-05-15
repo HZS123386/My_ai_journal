@@ -1,18 +1,22 @@
-from fastapi import FastAPI, Depends, Request, HTTPException, File, UploadFile, Form
+from fastapi import FastAPI, Depends, Request, HTTPException, File, UploadFile, Form, Query
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from file_parser import parse_file
 from sqlalchemy.orm import Session
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+import math
 import os
 import shutil
 from uuid import uuid4
+from sqlalchemy import or_, cast
+from sqlalchemy import String as SQLString
 
 from database import Base, engine, SessionLocal
 from models import Entry, User
 from schemas import (
     EntryCreate,
     EntryResponse,
+    EntryListResponse,
     UserCreate,
     UserLogin,
     UserResponse,
@@ -143,11 +147,15 @@ def create_entry(
 ):
     ai_result = analyze_entry(entry.content)
 
+    manual_tags = entry.tags or []
+    ai_tags = ai_result.get("tags",[])
+
     new_entry = Entry(
         content=entry.content,
         summary=ai_result["summary"],
         mood=ai_result["mood"],
         todos=ai_result["todos"],
+        tags=manual_tags or ai_tags,
         user_id=current_user.id,
     )
 
@@ -159,20 +167,55 @@ def create_entry(
 #获取
 @app.get(
     "/entries",
-    response_model=list[EntryResponse],
+    response_model=EntryListResponse,
     summary="获取日记列表",
-    description="按最新创建时间倒序返回所有日记"
+    description="支持搜索、分页、情绪筛选和标签筛选"
 )
 def list_entries(
+        q: str | None = Query(None, description="搜索关键词"),
+        mood: str | None = Query(None, description="情绪筛选"),
+        tag: str | None = Query(None, description="标签筛选"),
+        page: int = Query(1, ge=1, description="页码，从1开始"),
+        page_size: int = Query(10, ge=1, le=50, description="每页数量"),
         db: Session = Depends(get_db),
         current_user: User = Depends(get_current_user)
 ):
-    return (
-            db.query(Entry)
-            .filter(Entry.user_id == current_user.id)
-            .order_by(Entry.id.desc())
-            .all()
+    query = db.query(Entry).filter(Entry.user_id == current_user.id)
+
+    if q:
+        keyword = f"%{q.strip()}%"
+        query = query.filter(
+            or_(
+                Entry.content.ilike(keyword),
+                Entry.summary.ilike(keyword)
+            )
+        )
+
+    if mood:
+        query = query.filter(Entry.mood == mood)
+
+    if tag:
+        query = query.filter(
+            cast(Entry.tags, SQLString).ilike(f'%"{tag}"%')
+        )
+
+    total = query.count()
+
+    entries = (
+        query
+        .order_by(Entry.created_at.desc(), Entry.id.desc())
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+        .all()
     )
+
+    return {
+        "items": entries,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "pages": math.ceil(total / page_size) if total else 0
+    }
 
 
 @app.get("/entries/{entry_id}", response_model=EntryResponse, summary="获取日记详情")

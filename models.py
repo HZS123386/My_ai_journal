@@ -25,6 +25,7 @@ class Entry(Base):
     summary = Column(String,nullable=True)
     mood = Column(String,nullable=True)
     todos = Column(JSON,nullable=True)
+    tags = Column(JSON,nullable=True)
     created_at = Column(DateTime,default=datetime.utcnow)
 
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
